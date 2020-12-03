@@ -1,7 +1,7 @@
 # BcLOV4-FEM
 Code used for 3D finite element analysis for BcLOV4 spatiotemporal dynamics.
 
-<b>Introduction<\b>
+<b>Introduction</b>
 
 Dynamic membrane recruitment of a cytosol-sequestered protein is one of the most generalizable and ubiquitously applied approaches in optogenetics to control intracellular signaling. It is particularly well-suited to creating inducible peripheral membrane protein systems with the requisite spatiotemporal precision for systematically probing the signaling dynamics that govern how cells respond to external stimuli and regulate their cytoskeletal architecture. The recruitment can be mediated by a protein-protein interaction (PPI) as with optogenetic heterodimerization systems, or by a light-regulated protein-lipid interaction (PLI) between a photoreceptor and the plasma membrane itself, as we have previously shown with BcLOV4, a LOV (light-oxygen-voltage) protein from B. cinerea.
 
