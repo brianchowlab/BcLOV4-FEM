@@ -11,8 +11,8 @@ Here, we present FEM code that describes the cell-wide 3D spatiotemporal dynamic
 
 The model recapitulates salient features observed experimentally, including near diffusion-limited membrane association, protein depletion from distal non-illuminated regions, and dependency of signaling efficiency on optical stimulation intensity and timing. This work greatly informs how optical inputs shape optogenetic signaling outputs and provides a foundation upon which to further construct more complex spatiotemporally accurate models of peripheral membrane protein signaling.
 
-<b>Dependencies:<\b>
+<b>Dependencies:</b>
   
 MATLAB with PDE ToolBox. Development was done with MATLAB R2019b, may work for earlier version.
 
-<b>Instructions for Use:<\b>
+<b>Instructions for Use:</b>
