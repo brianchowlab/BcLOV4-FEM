@@ -13,6 +13,6 @@ The model recapitulates salient features observed experimentally, including near
 
 <b>Dependencies:</b>
   
-MATLAB with PDE ToolBox. Development was done with MATLAB R2019b, may work for earlier version.
+MATLAB with PDE Toolbox. Development was done with MATLAB R2019b, may work for earlier versions.
 
 <b>Instructions for Use:</b>
