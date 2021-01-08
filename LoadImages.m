@@ -1,5 +1,4 @@
-function [contours,mask_il,I] = LoadImages()
-    im_file = input('Location of Image: ');%'C:\Users\Ivan Kuznetsov\Desktop\PhD\BcRGS5\1-2_c.png'
+function [contours,mask_il,I] = LoadImages(im_file)
     I = imread(im_file);
     I = imresize(I,[floor(size(I,1)/2),floor(size(I,2)/2)]);
     I = flipud(I);

@@ -1,3 +1,4 @@
+im_file 1-2_c.png %Image file name - MUST BE FIRST LINE
 D 25 %um^2/s
 S 25000 %binding sites/um^2
 D_m 0.089 %um^2/s
