@@ -293,5 +293,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
     gm_c = geometryFromMesh(model,nodes,elements);
     %pdegplot(model,'CellLabels','on','FaceAlpha',0.5)
     mesh_c = generateMesh(model,'GeometricOrder','linear','Hmin',param.min_element_size,'Hmax',param.max_element_size);%mesh_c = generateMesh(model,'Hmin',0.5,'Hmax',30,'GeometricOrder','linear');
-    pdemesh(mesh_c,'FaceAlpha',0.1)
+    if param.plot
+        pdemesh(mesh_c,'FaceAlpha',0.1)
+    end
 end

@@ -3,7 +3,7 @@ function [c_intrp] =InterpolateCytoplasm(pde_C,desired_times,I,param)
     samp_res = param.scale_len;
     scale=1;
 
-    z = (-7:axial_resolution:7 + 1e-4)+1e-4;
+    z = (-7:axial_resolution*scale:7 + 1e-4)+1e-4;
 
     % Cytoplasm
     x = (0:scale:(size(I,1)-1))*samp_res + samp_res/2;
@@ -19,11 +19,11 @@ function [c_intrp] =InterpolateCytoplasm(pde_C,desired_times,I,param)
 
     %This gives the concentration of BcLOV at each grid point. We are
     %intersted in the number of BcLOV molecules in each voxel.
-    volume_grid = (samp_res*scale).^2*axial_resolution;
-    idx_c = c_intrp(:) > 0;
-    idx_c = idx_c(1:size(idx_nan,1)/size(c_intrp,4));
-    idx_m = find(~idx_nan(1:size(idx_nan,1)/size(c_intrp,4)));
+    %volume_grid = (samp_res*scale).^2*axial_resolution;
+    %idx_c = c_intrp(:) > 0;
+    %idx_c = idx_c(1:size(idx_nan,1)/size(c_intrp,4));
+    %idx_m = find(~idx_nan(1:size(idx_nan,1)/size(c_intrp,4)));
 
     
-    vol_int = CytoplasmVolume(v,volume_grid,idx_c,idx_nan,param);
+    %vol_int = CytoplasmVolume(v,volume_grid,idx_c,idx_nan,param);
 end

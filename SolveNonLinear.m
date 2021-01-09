@@ -56,7 +56,7 @@ function [Soln] = SolveNonLinear(param,solver_params)
     Step_1_LHS_decomp_dark = decomposition(Step_1_LHS_dark);
 
     %Time discretisation via the fractional-step theta method
-    Soln = zeros(2*MN + 2*CN,1+param.num_steps/param.store_interval);
+    Soln = zeros(2*MN + 2*CN,floor(param.num_steps/param.store_interval));
     Soln(:,1) = u_h;
 
     for ii = 1:param.num_steps  
@@ -160,8 +160,8 @@ function [Soln] = SolveNonLinear(param,solver_params)
         %    u_h = dMAT_off\RHS;
         %    %Soln(:,ii+1) = gmres(MAT_off,RHS,10,1e-6,100,L_off,U_off,u_h);
         %end
-        if mod(ii,param.store_interval) == 0
-            Soln(:,ii/param.store_interval+1) = u_h;
+        if mod(ii-1,param.store_interval) == 0
+            Soln(:,(ii-1)/param.store_interval+1) = u_h;
         end
         toc
     end

@@ -1,9 +1,22 @@
-function [vol_int] = CytoplasmVolume(v,volume_grid,idx_c,idx_nan,param)    
+function [vol_int] = CytoplasmVolume(I,interp_props,param)    
+    axial_resolution = param.scale_len;
     samp_res = param.scale_len;
+    scale=2;
+
+    z = (-7:axial_resolution*scale:7 + 1e-4)+1e-4;
+
+    % Cytoplasm
+    x = (0:scale:(size(I,1)-1))*samp_res + samp_res/2;
+    y = (0:scale:(size(I,2)-1))*samp_res + samp_res/2;
+
+    [X,Y,Z] = meshgrid(x,y,z);
+    v = [X(:),Y(:),Z(:)];
+    
+    volume_grid = (samp_res*scale).^2*axial_resolution;
     vol_int = zeros(size(v,1),1);
      
-    vol_int(idx_c) = volume_grid;
-    for i = 1:size(idx_m)
+    vol_int(interp_props.idx_c) = volume_grid;
+    for i = 1:size(interp_props.idx_m)
         if mod(i,1000) == 0
             i
         end

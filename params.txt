@@ -1,21 +1,22 @@
-im_file 1-2_c.png %Image file name - MUST BE FIRST LINE
-D 25 %um^2/s
+im_file ex.png %Image file name - MUST BE FIRST LINE
+il_roi_file ex-roi.roi %Illumination ROI, can be NA  - MUST BE SECOND LINE
+nucleus_roi_file ex-roi-n.roi %Nucleus ROI, can be NA  - MUST BE THIRD LINE
+cyto_roi_file ex-roi-c.roi %Cytosol ROI, can be NA  - MUST BE FOURTH LINE
+D 9 %um^2/s
 S 25000 %binding sites/um^2
-D_m 0.089 %um^2/s
+D_m 0.005 %um^2/s
 k_off_p 0.0541 %s-1
 k_on_d 2125.2 %M-1 s-1
 k_on_l 50140 %M-1 s-1
 k_off_d 0.009167 %s-1
 k_off_l 0.0070649 %s-1
-power_density 0.012 %W/cm^2
+power_density 1 %W/cm^2
 quantum_yield_signaling_state 0.726 %Fraction
-excitation_duration 0.1 %s
 duty_cycle 1 %Percent
 min_element_size 1 %um
 max_element_size 10 %um
 downsample 1
-tmax 200 %s
-scale_len 0.2 %pixel size in um
+scale_len 0.095 %pixel size in um
 hn 5 %Maximum height of nucleus in the + and - direction
 h 7 %Maximum height of cytoplasm in the + and - direction
 extrude 10 %Resolution of semi-ellipsoid extrusion
@@ -24,10 +25,10 @@ extinction_coeff 7000 %M-1 cm-1 (at excitation wavelength)
 NA 1.4 %lens numerical aperture
 immersion_n 1.52 %refractive index of immersion medium
 dt 2e-2 %Time step for ODE/PDE solver
-num_steps 10000 %Number of time steps
+num_steps 100 %Number of time steps
 store_interval 5 %How many time steps between stored solutions
-ex_duration 0.25 %Excitation duration (s)
-period 1 %Periodicity of excitation (s)
+period 10 %Periodicity of excitation (s)
 theta 0.2929 %Value of theta for solver
-conc 10
+conc 3 %Ratio of cellular fluorescence to concentration
 tol 1e-3 %Tolerance for Newton's Method
+plot 1 %Plot results?

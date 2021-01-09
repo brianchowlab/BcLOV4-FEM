@@ -1,11 +1,16 @@
 %% Set parameters
 fid = fopen('params.txt');
-params = textscan(fid,'%s %f','delimiter',' ','HeaderLines',1,'MultipleDelimsAsOne',1,'CommentStyle','%');
+params = textscan(fid,'%s %f','delimiter',' ','HeaderLines',4,'MultipleDelimsAsOne',1,'CommentStyle','%');
 fclose(fid);
 fid = fopen('params.txt');
-im_file = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
+ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
 fclose(fid);
-im_file = im_file{2}{1};
+param = cell2struct(num2cell(params{2}),string(params{1})');
+param.im_file = ims_and_rois{2}{1};
+param.il_roi_file = ims_and_rois{2}{2};
+param.nucleus_roi_file = ims_and_rois{2}{3};
+param.cyto_roi_file = ims_and_rois{2}{4};
+
 
 %Unit conversion
 unit_scaling_k_on_l_and_d = 1e15/6.02214076e23;%Convert from M-1 s-1 to um^3 s-1 molecules-1
@@ -17,47 +22,25 @@ excitation_frequency = 299792458 * 1e9 / param.excitation_wavelength;%1/s
 absorption_cross = param.extinction_coeff * 2303 / 6.0221409e23;%cm-2
 photon_excitation_flux_density = param.power_density / excitation_frequency / 6.626e-34;%photons cm-2 s-1
 param.k_on_p = param.quantum_yield_signaling_state * absorption_cross * photon_excitation_flux_density;%rate constant of signaling state formation, s-1
-param.period = param.excitation_duration * 100/param.duty_cycle;
-
+param.ex_duration = param.period * param.duty_cycle/100;
 %% Load image
-[contours,mask_il,I] = LoadImages(im_file);
+[contours,mask_il,I] = LoadImages(param);
 
 %% Make Mesh
 [mesh_c,poly,shp_n] = GenMesh(contours,param);
 
-% Compute key values (indices, volumes, etc.)
-
-%Mesh elements
-%props.elements = mesh_c.Elements;
-
-%Mesh nodes
-%props.nodes = mesh_c.Nodes;
-
-%Element volumes
-%props.vol_els = zeros(size(props.elements,2),1);
-%for i = 1:size(props.elements,2)
-%    props.vol_els(i) = volume(mesh_c,i);
-%end
-%props.vol = zeros(size(props.nodes,2),1);
-
-%Aprroximate volume that each node represents
-%for i = 1:size(mesh_c.Nodes,2)
-%    [loc,attached_el] = ind2sub(size(props.elements),find(props.elements == i));
-%    props.vol(i) = volume(mesh_c,attached_el)/4;
-%end
-
 % Determine illuminated region
-[photo_on_scale,idx_excited] = ExcitationROI(mask_il,poly,props,param,1);
+[photo_on_scale,idx_excited] = ExcitationROI(mesh_c,mask_il,poly,param);
 %% Build FEM matrices with FELICITY and solve.
 cd FELICITY;FELICITY_paths;cd ..;
 
 %Port 3D cytoplasm mesh into FELICITY
-Mesh = MeshTetrahedron(props.elements',props.nodes','Omega');
+Mesh = MeshTetrahedron(mesh_c.Elements',mesh_c.Nodes','Omega');
 
 props = MeshProps(Mesh,shp_n);
 
-[~,idx] = ismember(P,Mesh.Points,'rows');
-Mesh = Mesh.Append_Subdomain('2D','dOmega',Faces);
+[~,idx] = ismember(props.surface_nodes,props.nodes,'rows');
+Mesh = Mesh.Append_Subdomain('2D','dOmega',props.faces);
 
 %Calculate which nodes are illuminated
 param.il_c = photo_on_scale;%inShape(shp_l,Mesh.Points);
@@ -85,7 +68,7 @@ C_Space = C_Space.Set_DoFmap(Mesh,uint32(Mesh.ConnectivityList));
 
 M_RefElem_2D = ReferenceFiniteElement(lagrange_deg1_dim2());
 M_Space = FiniteElementSpace('M_h',M_RefElem_2D,Mesh,'dOmega');
-M_Space = M_Space.Set_DoFmap(Mesh,uint32(Faces_renum));
+M_Space = M_Space.Set_DoFmap(Mesh,uint32(props.pm_faces_renum));
 
 Domain_Names = {'Omega'; 'dOmega'};
 Omega_Embed = Mesh.Generate_Subdomain_Embedding_Data(Domain_Names);
@@ -99,8 +82,8 @@ MN = M_Space.num_dof;
 solver_params.FEM = [];
 solver_params.FEM_l = [];
 solver_params.FEM_nl = [];
-solver_params.p = Mesh.Points;
-solver_params.c = uint32(Mesh.ConnectivityList);
+solver_params.p = props.nodes;
+solver_params.c = uint32(props.elements);
 solver_params.embed = Omega_Embed;
 solver_params.C_DoF = C_Space.DoFmap;
 solver_params.M_DoF = M_Space.DoFmap;
@@ -121,7 +104,6 @@ solver_params.v_M = u_h(2*CN+MN+1:end);
 
 Soln = SolveNonLinear(param,solver_params);
 
-idx_m = unique(Faces(:));
 u_C = Soln(1:CN,:);
 v_C = Soln((CN+1):2*CN,:);
 u_M = Soln(2*CN+1:2*CN+MN,:);
@@ -129,18 +111,15 @@ v_M = Soln(2*CN+MN+1:end,:);
 
 sol_C = u_C + v_C;
 sol_M = u_M + v_M;
-sol_all = sol_C;
-sol_all(idx_m,:) = sol_all(idx_m,:) + sol_M;
-sol_M_embed = zeros(size(sol_C));
-desired_times = 1:1/(param.dt*param.store_interval):size(sol_all,2);
 
-sol_M_embed(idx_m,:) = sol_M_embed(idx_m,:) + sol_M;
-sol_M = sol_M(:,desired_times);
+tlist = (0:param.num_steps-1)*param.dt;
+desired_times = 1:param.store_interval:param.num_steps;
+
 
 pdem_C = createpde(1);
-gm_C_f = geometryFromMesh(pdem_C,Mesh.Points',Mesh.ConnectivityList');
-pde_C=createPDEResults(pdem_C,sol_C(:,desired_times),tlist(desired_times),'time-dependent');
-save('data.mat','v_M','u_M','v_C','u_C','idx_m','tlist','desired_times','pdem_C','gm_C_f');
+gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
+pde_C=createPDEResults(pdem_C,sol_C,tlist(desired_times),'time-dependent');
+save('data.mat','Soln','props','tlist','desired_times','pdem_C','gm_C_f');
 clear v_M u_M v_C u_C
 clear sol_C sol_all sol_M_embed
 clear v_C_1 v_C_2 v_C_3 v_C_4 v_C_nl_2 v_M_1 v_M_2 v_M_3 v_M_4 v_M_nl_2 v_C_nl_2
@@ -150,30 +129,17 @@ clear Z params mask
 clear Soln A_phi A_psi B_phi B_psi FEM_l FEM_nl J K_phi K_phi_phi K_phi_psi K_psi K_psi_phi
 clear Step_1_LHS_dark Step_1_LHS_lit Step_1_LHS_decomp Step_1_LHS_decomp_dark Step_1_LHS_decomp_lit
 %% Interpolate 
-[c_intrp] = InterpolateCytoplasm(pde_C,desired_times,I,param);
+[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
+[m_intrp]= InterpolateMembrane(I,1:length(desired_times),props.surface_TR,sol_M,param);
+[c_intrp] = InterpolateCytoplasm(pde_C,1:length(desired_times),I,param);
 
+interp_props.idx_nan = isnan(m_intrp(:));
+m_intrp(c_intrp(:) > 0 & nterp_props.idx_nan) = 0;
+interp_props.idx_c = c_intrp(:) > 0;
+interp_props.idx_c = interp_props.idx_c(1:size(interp_props.idx_nan,1)/size(c_intrp,4));
+interp_props.idx_m = find(~interp_props.idx_nan(1:size(interp_props.idx_nan,1)/size(c_intrp,4)));
 
-% Compute volume of cytoplasm at each grid point
-vol_int = zeros(size(v,1),1);
-idx_c = c_intrp(:) > 0;
-idx_c = idx_c(1:size(idx_nan,1)/size(c_intrp,4));
-vol_int(idx_c) = volume_grid;
-idx_m = find(~idx_nan(1:size(idx_nan,1)/size(c_intrp,4)));
-for i = 1:size(idx_m)
-    if mod(i,1000) == 0
-        i
-    end
-    p = v(idx_m(i),:);
-    x = linspace(-samp_res/2 + p(1),samp_res/2 + p(1),2);
-    y = linspace(-samp_res/2 + p(2),samp_res/2 + p(2),2);
-    z = linspace(-samp_res/2 + p(3),samp_res/2 + p(3),2);
-    [X,Y,Z] = meshgrid(x,y,z);
-    v_s = [X(:),Y(:),Z(:)];
-    fraction_in = nansum(pointLocation(DT,v_s)>0)/8;
-    vol_int(idx_m(i)) = fraction_in;
-end
-
-
+vol_int = CytoplasmVolume(I,interp_props,param);
 
 
 %%
@@ -252,10 +218,7 @@ psf_params.oversampling = 2;
 
 
 %% Convolve with PSF
-%c_intrp_blurred = zeros(size(c_intrp));
 c_intrp_blurred = zeros(size(c_intrp),'single');
-%c_intrp(isnan(c_intrp(:))) = 0;
-%m_intrp(isnan(m_intrp(:))) = 0;
 for i=1:4:size(desired_times,2)%[1,size(desired_times,2)]%
     i
     %c_intrp_blurred(:,:,:,i) = convn(c_intrp(:,:,:,i),PSF_3D,'same');

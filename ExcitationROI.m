@@ -1,4 +1,4 @@
-function [photo_on_scale,idx_excited] = ExcitationROI(mask_il,poly,props,param,plot)
+function [photo_on_scale,idx_excited] = ExcitationROI(mesh_c,mask_il,poly,param)
     z = -param.h:param.scale_len:param.h;
     v = poly.il.Vertices;
     c = mean(v);
@@ -10,7 +10,7 @@ function [photo_on_scale,idx_excited] = ExcitationROI(mask_il,poly,props,param,p
     x0 = min(coords_il.X,[],'all');x1 = max(coords_il.X,[],'all');
     y0 = min(coords_il.Y,[],'all');y1 = max(coords_il.Y,[],'all');
     z0 = min(coords_il.Z,[],'all');z1 = max(coords_il.Z,[],'all');
-    v = props.nodes';
+    v = mesh_c.Nodes';
     idx_in = find(v(:,1) >= x0 & v(:,1) <= x1 & v(:,2) >= y0 & v(:,2) <= y1 & v(:,3) >= z0 & v(:,3) <= z1);
     photo_on_scale = zeros(size(v,1),1);
     s = [coords_il.X(:),coords_il.Y(:),coords_il.Z(:)];
@@ -26,11 +26,11 @@ function [photo_on_scale,idx_excited] = ExcitationROI(mask_il,poly,props,param,p
     idx_excited = find(photo_on_scale > 0.25);
     %Plot
 
-    if plot
+    if param.plot
         cut=fliplr(logspace(log10(max(max(max(il_3D)))/4),log10(max(max(max(il_3D)))),5));
 
 
-        figure;
+        hold on
         a = gca;
 
         h = waitbar(0,'Please wait...');

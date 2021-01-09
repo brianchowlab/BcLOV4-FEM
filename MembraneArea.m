@@ -1,6 +1,11 @@
-function [] = MembraneArea(x,y,z,TR,param)
+function [voxel_mem_area,pixel_map] = MembraneArea(I,TR,param)
     samp_res = param.scale_len;
     axial_resolution = samp_res;
+    scale=1;
+
+    x = (0:scale:size(I,1)-1)*samp_res + samp_res/2;
+    y = (0:scale:size(I,2)-1)*samp_res + samp_res/2;
+    z = -param.h:axial_resolution:param.h;
     
     x_box = find(x > (min(TR.Points(:,1))-samp_res) & x < (max(TR.Points(:,1))+samp_res));
     y_box = find(y > (min((TR.Points(:,2))-samp_res) & y < (max((TR.Points(:,2))+samp_res))));

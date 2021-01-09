@@ -5,6 +5,7 @@ function [props] = MeshProps(Mesh,shp_n)
     props.faces = Mesh.freeBoundary();
     props.unique_faces = unique(props.faces(:));
     props.nodes = Mesh.Points;
+    props.elements = Mesh.ConnectivityList;
     props.surface_TR = triangulation(props.faces,props.nodes(props.unique_faces,:));
     props.surface_nodes = props.surface_TR.Points;
     props.surface_vert_normal = vertexNormal(props.surface_TR);
@@ -17,8 +18,8 @@ function [props] = MeshProps(Mesh,shp_n)
         props.pm_faces(any(props.pm_faces == props.nucleus_surface_nodes_idx(i),2),:) = [];
     end
     props.pm_unique_faces = unique(props.pm_faces(:));
-    props.pm_unique_faces_renum = props.pm_unique_faces;
+    props.pm_faces_renum = props.pm_faces;
     for i = 1:size(props.pm_unique_faces,1)
-       props.pm_unique_faces_renum(props.pm_unique_faces_renum == props.pm_unique_faces(i)) = i;
+       props.pm_faces_renum(props.pm_faces_renum == props.pm_unique_faces(i)) = i;
     end
 end

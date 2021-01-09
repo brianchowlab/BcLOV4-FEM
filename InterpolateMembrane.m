@@ -1,4 +1,4 @@
-function [] = InterpolateMembrane(I,c_intrp,TR,sol_M,param)
+function [m_intrp] = InterpolateMembrane(I,desired_times,TR,sol_M,param)
     scale=1;
     samp_res = param.scale_len;
     axial_resolution = samp_res;
@@ -7,8 +7,8 @@ function [] = InterpolateMembrane(I,c_intrp,TR,sol_M,param)
     y = (0:scale:size(I,2)-1)*samp_res + samp_res/2;
     z = -param.h:axial_resolution:param.h;
 
-    m_intrp = NaN(size(c_intrp),'single');
-    for k=1:size(c_intrp,4)
+    m_intrp = NaN(size(y,2),size(x,2),size(z,2),size(desired_times,2),'single');
+    for k=1:size(m_intrp,4)
         F = scatteredInterpolant(TR.Points(:,1),TR.Points(:,2),TR.Points(:,3),sol_M(:,k));
         planes.n = [zeros(size(z,2),2),ones(size(z,2),1)];
         planes.r = [zeros(size(z,2),2),z'];
