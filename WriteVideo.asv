@@ -1,0 +1,11 @@
+function [props] = WriteVideo(filename,frame_rate,
+writerObj = VideoWriter(filename,'Indexed AVI');
+writerObj.FrameRate = 30;
+writerObj.Colormap = jet;
+open(writerObj);
+for t=1:size(m_intrp_blurred,4)
+  t
+  frame = im2frame(imadjust(m_intrp_s(:,:,36,t),[0,1],[0,1],2),jet);
+  writeVideo(writerObj, frame);
+end
+close(writerObj);

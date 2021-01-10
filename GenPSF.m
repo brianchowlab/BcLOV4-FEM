@@ -1,15 +1,18 @@
-function [PSF_3D] = GenPSF(psf_params,plot)
+function [PSF_3D] = GenPSF(psf_params,param)
+    cd MicroscPSF
     PSF_3D = MicroscPSF(psf_params);
-    PSF_3D = PSF_3D / sum(PSF_3D,'all');
+    cd ..
+    s = sum(PSF_3D,'all');
+    PSF_3D = PSF_3D / s;
 
-    if plot
+    if param.plot
         [nx,ny,nz] = size(PSF_3D);
 
         cut=exp(-1:-1:-5)/s;
         [X,Y,Z]=meshgrid(-(nx/2-1):nx/2,-(ny/2-1):ny/2,-(nz/2-1):nz/2);
-        X = X*samp_res;
-        Y=Y*samp_res;
-        Z=Z*axial_resolution;
+        X = X*param.scale_len;
+        Y=Y*param.scale_len;
+        Z=Z*param.scale_len;
 
         figure;
         a = gca;
@@ -27,6 +30,6 @@ function [PSF_3D] = GenPSF(psf_params,plot)
         grid('on');
         camlight;
         figure
-        surf(X(:,:,1),Y(:,:,1),PSF_3D(:,:,ceil(solver_params.size(3)/2)))    
+        surf(X(:,:,1),Y(:,:,1),PSF_3D(:,:,ceil(psf_params.size(3)/2)))    
     end
 end

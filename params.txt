@@ -8,13 +8,13 @@ D_m 0.005 %um^2/s
 k_off_p 0.0541 %s-1
 k_on_d 2125.2 %M-1 s-1
 k_on_l 50140 %M-1 s-1
-k_off_d 0.009167 %s-1
+k_off_d 0.0458%s-1 0.009167
 k_off_l 0.0070649 %s-1
-power_density 1 %W/cm^2
+power_density 10 %W/cm^2
 quantum_yield_signaling_state 0.726 %Fraction
 duty_cycle 1 %Percent
-min_element_size 1 %um
-max_element_size 10 %um
+min_element_size .25 %um
+max_element_size 2 %um
 downsample 1
 scale_len 0.095 %pixel size in um
 hn 5 %Maximum height of nucleus in the + and - direction
@@ -23,12 +23,14 @@ extrude 10 %Resolution of semi-ellipsoid extrusion
 excitation_wavelength 405 %nm
 extinction_coeff 7000 %M-1 cm-1 (at excitation wavelength)
 NA 1.4 %lens numerical aperture
+mag 63 %lens magnification
 immersion_n 1.52 %refractive index of immersion medium
-dt 2e-2 %Time step for ODE/PDE solver
-num_steps 100 %Number of time steps
-store_interval 5 %How many time steps between stored solutions
+dt 2e-3 %Time step for ODE/PDE solver
+num_steps 1000 %Number of time steps
+store_interval 10 %How many time steps between stored solutions
 period 10 %Periodicity of excitation (s)
 theta 0.2929 %Value of theta for solver
-conc 3 %Ratio of cellular fluorescence to concentration
+conc_ratio 35 %Ratio of cellular fluorescence to concentration (uM)
+offset 0 %Background fluorescence
 tol 1e-3 %Tolerance for Newton's Method
 plot 1 %Plot results?
