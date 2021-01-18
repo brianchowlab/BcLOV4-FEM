@@ -1,5 +1,5 @@
 function [] = PlotSol(Soln,photo_on_scale,CN,MN,props,param)
-    idx_m = unique(props.faces(:));
+    idx_m = unique(props.pm_faces(:));
     idx_excited = find(photo_on_scale > 0.25);
     
     u_C = Soln(1:CN,:);

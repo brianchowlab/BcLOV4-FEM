@@ -6,12 +6,13 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
     %-------------Pre-compute polyshapes/centroids-------------%   
     %Polyshapes get rid of co-linear points present in the contours.
     %Illuminated region
-    pg_il = polyshape([contours.il]*param.scale_len);
+    %pg_il = polyshape([contours.il]*param.scale_len);
 
     %Nucleus/cytoplasm
     pg = polyshape([contours.cytoplasm;contours.nucleus]*param.scale_len);
     pg_c = polyshape([contours.cytoplasm]*param.scale_len);
     pg_n = polyshape([contours.nucleus]*param.scale_len);
+    pg_il = polyshape([contours.il]*param.scale_len);
     
     poly.il = pg_il;
     poly.cn = pg;
@@ -23,7 +24,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
     verts_n = [pg_n.Vertices,zeros(size(pg_n.Vertices,1),1)];
     verts_n = verts_n(1:param.downsample:end,:);
 
-    cent_c = nanmean(pg_c.Vertices);
+    cent_c = cent_n;%nanmedian(pg_c.Vertices);%
     verts_c = [pg_c.Vertices,zeros(size(pg_c.Vertices,1),1)];
     verts_c = verts_c(1:param.downsample:end,:);
 
@@ -282,9 +283,10 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
     y = [y;nodes(:,2)];
     z = [z;nodes(:,3)];
 
-    shp_cn = alphaShape(x,y,z,2);
-    %plot(shp_cn,'FaceAlpha',0.5)
-
+    shp_cn = alphaShape(x,y,z,param.alpha_radius);
+    numRegions(shp_cn)
+    plot(shp_cn,'FaceAlpha',0.5)
+    figure
     %-------------Mesh cytoplasm/nuclear void using built in mesh generator-------------%
     [elements,nodes] = boundaryFacets(shp_cn);
     nodes = nodes';
@@ -295,5 +297,11 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
     mesh_c = generateMesh(model,'GeometricOrder','linear','Hmin',param.min_element_size,'Hmax',param.max_element_size);%mesh_c = generateMesh(model,'Hmin',0.5,'Hmax',30,'GeometricOrder','linear');
     if param.plot
         pdemesh(mesh_c,'FaceAlpha',0.1)
+        h = gca;
+        h = h.Children;
+        h(2).Visible = 'Off';
+        h(3).Visible = 'Off';
+        h(4).Visible = 'Off';
+        h(5).Visible = 'Off';
     end
 end

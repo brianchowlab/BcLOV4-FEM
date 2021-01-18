@@ -41,6 +41,8 @@ function [Soln] = SolveNonLinear(param,solver_params)
     u_M_nl_1 = -param.k_on_l*B_psi;
     v_M_nl_2 = -param.k_on_d*B_psi;
 
+    disp('Decomposing matrices for linear steps')
+    if param.debug;start = tic;end
     %Step 1
     Step_1_LHS_lit = [u_C_1(param.theta),u_C_2,u_C_3,u_C_4;v_C_1,v_C_2(param.theta),v_C_3,v_C_4;u_M_1,u_M_2,u_M_3(param.theta),u_M_4;v_M_1,v_M_2,v_M_3,v_M_4(param.theta)];
     Step_1_LHS_decomp_lit = decomposition(Step_1_LHS_lit);
@@ -54,14 +56,15 @@ function [Soln] = SolveNonLinear(param,solver_params)
     %Step 1
     Step_1_LHS_dark = [u_C_1(param.theta),u_C_2,u_C_3,u_C_4;v_C_1,v_C_2(param.theta),v_C_3,v_C_4;u_M_1,u_M_2,u_M_3(param.theta),u_M_4;v_M_1,v_M_2,v_M_3,v_M_4(param.theta)];
     Step_1_LHS_decomp_dark = decomposition(Step_1_LHS_dark);
-
+    if param.debug;t_i = toc(start);disp(['Initial decomposition took ',num2str(t_i),'s.']);end
     %Time discretisation via the fractional-step theta method
     Soln = zeros(2*MN + 2*CN,1+param.num_steps/param.store_interval);
     Soln(:,1) = u_h;
 
     for ii = 1:param.num_steps  
-        disp('-------------------------------------------------------');
-        disp(['Time Index: ', num2str(ii), ' of ', num2str(param.num_steps)]);
+        %disp('-------------------------------------------------------');
+        disp(['Step ', num2str(ii), ' of ', num2str(param.num_steps)]);
+        if param.debug;start = tic;end
         if mod(ii - 1,param.period/param.dt) <=param.ex_duration/param.dt
             param.k_on_p = k_on_p_store;
             Step_1_LHS_decomp = Step_1_LHS_decomp_lit;
@@ -78,7 +81,7 @@ function [Soln] = SolveNonLinear(param,solver_params)
             v_M_4 = @(theta) K_psi/(theta*param.dt)+param.D_m*A_psi+param.k_off_d*K_psi;
         end
 
-        tic
+        main = tic;
         solver_params.u_M = u_h(2*CN+1:2*CN+MN);
         solver_params.v_M = u_h(2*CN+MN+1:end);
 
@@ -93,11 +96,11 @@ function [Soln] = SolveNonLinear(param,solver_params)
 
         %RHS = blkdiag(K_phi,K_phi,K_psi,K_psi)*u_h/(param.theta*param.dt);
         u_h = Step_1_LHS_decomp\RHS;
-
+        if param.debug;t_i = toc(start);disp(['Sub-step 1 took ',num2str(t_i),'s.']);end
 
         %Step 2
         %Initial guess
-
+        if param.debug;start = tic;end
         x0 = u_h;
         err = 100;
         while err > param.tol
@@ -141,8 +144,10 @@ function [Soln] = SolveNonLinear(param,solver_params)
         end
 
         u_h = x0;
-
+        if param.debug;t_i = toc(start);disp(['Sub-step 2 took ',num2str(t_i),'s.']);end
+        
         %Step 3
+        if param.debug;start = tic;end
         solver_params.u_M = u_h(2*CN+1:2*CN+MN);
         solver_params.v_M = u_h(2*CN+MN+1:end);
         [B_phi,B_psi]=FetchMatrices_nonlinear(solver_params);
@@ -163,7 +168,8 @@ function [Soln] = SolveNonLinear(param,solver_params)
         if mod(ii,param.store_interval) == 0
             Soln(:,ii/param.store_interval+1) = u_h;
         end
-        toc
+        if param.debug;t_i = toc(start);disp(['Sub-step 3 took ',num2str(t_i),'s.']);end
+        toc (main)
     end
     param.k_on_p = k_on_p_store;
     

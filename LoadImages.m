@@ -4,7 +4,7 @@ function [contours,mask_il,I] = LoadImages(param)
     I = fliplr(flipud(I));
 
     %Select nucleus
-    if strcmp(param.il_roi_file,'NA')
+    if strcmp(param.nucleus_roi_file,'NA')
         imshow(I)
         r = drawrectangle;
         mask = createMask(r);
@@ -18,7 +18,7 @@ function [contours,mask_il,I] = LoadImages(param)
         nucleus = poly2mask(nucleus_contour(:,1),nucleus_contour(:,2),size(I,1),size(I,2));
     end
 
-    if strcmp(param.il_roi_file,'NA')
+    if strcmp(param.cyto_roi_file,'NA')
         mask = ones(size(I));
         bw = activecontour(I,mask,500);
         se = strel('disk',5);
@@ -34,6 +34,8 @@ function [contours,mask_il,I] = LoadImages(param)
     
     if strcmp(param.il_roi_file,'NA')
         mask_il = ones(size(I));
+        il_contour = bwboundaries(mask_il);
+        il_contour = il_contour{1};
     else
         roi = ReadImageJROI(param.il_roi_file);
         il_contour = fliplr(size(I)) - roi.mnCoordinates;
@@ -44,7 +46,7 @@ function [contours,mask_il,I] = LoadImages(param)
         imshow(I)
         hold on;
         visboundaries(cytoplasm,'Color','r'); 
-        visboundaries(nucleus,'Color','g');
+        visboundaries(nucleus,'Color','y');
         visboundaries(mask_il,'Color','b')
     end
 

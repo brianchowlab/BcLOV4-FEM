@@ -41,25 +41,4 @@ function [il_3D,coords] = ExcitationVolumeDMD(mask_il,z,params)
     irradiance_integ = C * sum(on_uncropped,'all');
     irradiance_integ(:,:,ceil(size(z,2)/2)) = on_uncropped;
     il_3D = irradiance_integ;%permute(irradiance_integ,[2,1,3]);
-    
-    
-%     %Plot
-%     cut=fliplr(logspace(log10(max(max(max(irradiance_integ)))/4),log10(max(max(max(irradiance_integ)))),5));
-% 
-% 
-%     figure;
-%     a = gca;
-% 
-%     h = waitbar(0,'Please wait...');
-% 
-%     for k=1:numel(cut)
-%         isonormals(X,Y,Z,irradiance_integ,patch(isosurface(X,Y,Z,irradiance_integ,cut(k)),'EdgeColor','none','FaceAlpha',1/k,'FaceColor',[1 (k-1)/max(1,numel(cut)-0.99) 0],'Parent',a));
-%         waitbar(k / numel(cut))
-%     end
-%     close(h);
-%     view(35,45);
-%     axis('tight');
-%     lighting('gouraud');
-%     grid('on');
-%     camlight;
 end

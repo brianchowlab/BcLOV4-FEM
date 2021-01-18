@@ -29,7 +29,13 @@ function [PSF_3D] = GenPSF(psf_params,param)
         lighting('gouraud');
         grid('on');
         camlight;
-        figure
-        surf(X(:,:,1),Y(:,:,1),PSF_3D(:,:,ceil(psf_params.size(3)/2)))    
+        camlight;
+        set(gca,'XColor', 'none','YColor','none','ZColor','None')
+        set(gca, 'xtick', [])
+        set(gca, 'ytick', [])
+        set(gca, 'ztick', [])
+        set(gcf,'Color','w')
+        %figure
+        %surf(X(:,:,1),Y(:,:,1),PSF_3D(:,:,ceil(psf_params.size(3)/2)))    
     end
 end

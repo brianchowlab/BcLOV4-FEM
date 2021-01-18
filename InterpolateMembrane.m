@@ -1,15 +1,20 @@
-function [m_intrp] = InterpolateMembrane(I,desired_times,TR,sol_M,param)
+function [m_intrp] = InterpolateMembrane(I,desired_idx,TR,sol_M,param)
     scale=1;
     samp_res = param.scale_len;
     axial_resolution = samp_res;
 
     x = (0:scale:size(I,1)-1)*samp_res + samp_res/2;
     y = (0:scale:size(I,2)-1)*samp_res + samp_res/2;
-    z = -param.h:axial_resolution:param.h;
+    z = -param.h:param.scale_len:ceil(param.h/param.scale_len)*param.scale_len;
 
-    m_intrp = NaN(size(y,2),size(x,2),size(z,2),size(desired_times,2),'single');
+    
+    m_intrp = NaN(size(x,2),size(y,2),size(z,2),size(desired_idx,2),'single');
+    % m_intrp = sparse(size(x,2),size(y,2)*size(z,2)*size(desired_idx,2)); 
+    %m_intrp = ndSparse(m_intrp,[size(x,2),size(y,2),size(z,2),size(desired_idx,2)]);
+    h = waitbar(0,'Interpolating membrane...');
     for k=1:size(m_intrp,4)
-        F = scatteredInterpolant(TR.Points(:,1),TR.Points(:,2),TR.Points(:,3),sol_M(:,k));
+        waitbar(k/size(m_intrp,4));
+        F = scatteredInterpolant(TR.Points(:,1),TR.Points(:,2),TR.Points(:,3),sol_M(:,desired_idx(k)));
         planes.n = [zeros(size(z,2),2),ones(size(z,2),1)];
         planes.r = [zeros(size(z,2),2),z'];
         polygons = mesh_xsections( TR.Points,TR.ConnectivityList, planes, 1e-3, 0 );
@@ -50,9 +55,9 @@ function [m_intrp] = InterpolateMembrane(I,desired_times,TR,sol_M,param)
                 idx = find(ic == j);
                 pixel_val(j) = mean(N(idx));
             end 
-            C=sub2ind(size(m_intrp),C(:,2),C(:,1),C(:,3),C(:,4));
+            C=sub2ind(size(m_intrp),C(:,1),C(:,2),C(:,3),C(:,4));
             m_intrp(C) = pixel_val;
         end
-        close all
     end
+    close(h);
 end

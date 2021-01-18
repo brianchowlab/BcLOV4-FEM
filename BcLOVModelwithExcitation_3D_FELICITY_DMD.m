@@ -1,8 +1,9 @@
 %% Set parameters
-fid = fopen('params.txt');
-params = textscan(fid,'%s %f','delimiter',' ','HeaderLines',4,'MultipleDelimsAsOne',1,'CommentStyle','%');
+filename = 'params_DMD_250ms_10s_1.txt';
+fid = fopen(filename);
+params = textscan(fid,'%s %f','delimiter',' ','HeaderLines',5,'MultipleDelimsAsOne',1,'CommentStyle','%');
 fclose(fid);
-fid = fopen('params.txt');
+fid = fopen(filename);
 ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
 fclose(fid);
 param = cell2struct(num2cell(params{2}),string(params{1})');
@@ -10,7 +11,7 @@ param.im_file = ims_and_rois{2}{1};
 param.il_roi_file = ims_and_rois{2}{2};
 param.nucleus_roi_file = ims_and_rois{2}{3};
 param.cyto_roi_file = ims_and_rois{2}{4};
-
+param.z_stack = ims_and_rois{2}{5};
 
 %Unit conversion
 unit_scaling_k_on_l_and_d = 1e15/6.02214076e23;%Convert from M-1 s-1 to um^3 s-1 molecules-1
@@ -33,16 +34,19 @@ conversion = 1e-6 * 6.022e23 * 1e-15;
 
 % Determine illuminated region
 [photo_on_scale,idx_excited] = ExcitationROI(mesh_c,mask_il,poly,param);
+
 %% Build FEM matrices with FELICITY and solve.
-cd FELICITY;FELICITY_paths;cd ..;
+%cd FELICITY;FELICITY_paths;cd ..;
+addpath ./FELICITY
+FELICITY_paths
 
 %Port 3D cytoplasm mesh into FELICITY
 Mesh = MeshTetrahedron(mesh_c.Elements',mesh_c.Nodes','Omega');
 
 props = MeshProps(Mesh,shp_n);
 
-[~,idx] = ismember(props.surface_nodes,props.nodes,'rows');
-Mesh = Mesh.Append_Subdomain('2D','dOmega',props.faces);
+[~,idx] = ismember(props. pm_surface_nodes,props.nodes,'rows');
+Mesh = Mesh.Append_Subdomain('2D','dOmega',props.pm_faces);
 
 %Calculate which nodes are illuminated
 param.il_c = photo_on_scale;%inShape(shp_l,Mesh.Points);
@@ -109,20 +113,15 @@ PlotSol(Soln,photo_on_scale,CN,MN,props,param)
 
 pdem_C = createpde(1);
 gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
-pde_C=createPDEResults(pdem_C,sol_C,tlist(desired_times),'time-dependent');
-save('data.mat','Soln','props','tlist','desired_times','pdem_C','gm_C_f');
-%clear v_M u_M v_C u_C
-%clear sol_C sol_all sol_M_embed
-%clear v_C_1 v_C_2 v_C_3 v_C_4 v_C_nl_2 v_M_1 v_M_2 v_M_3 v_M_4 v_M_nl_2 v_C_nl_2
-%clear u_M_1 u_M_2 u_M_3 u_M_4 u_M_nl_1 u_C_1 u_C_2 u_C_3 u_C_4
-%clear shp_n shp_cn shp_c s pre il_phi il_psi il_M il_3D
-%clear Z params mask
-%clear Soln A_phi A_psi B_phi B_psi FEM_l FEM_nl J K_phi K_phi_phi K_phi_psi K_psi K_psi_phi
-%clear Step_1_LHS_dark Step_1_LHS_lit Step_1_LHS_decomp Step_1_LHS_decomp_dark Step_1_LHS_decomp_lit
+pde_C=createPDEResults(pdem_C,sol_C(:,1:param.interpolation_interval:end),tlist(desired_times(1:param.interpolation_interval:end)),'time-dependent');
+save('data.mat','Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
+clear Soln u_C u_M v_C v_M
 %% Interpolate 
 %[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
-[m_intrp]= InterpolateMembrane(I,1:length(desired_times),props.surface_TR,sol_M,param);
-[c_intrp] = InterpolateCytoplasm(pde_C,1:length(desired_times),I,param);
+m_intrp = InterpolateMembrane(I,1:param.interpolation_interval:length(desired_times),props.pm_TR,sol_M,param);
+%m_intrp = ndSparse(m_intrp,[size(m_intrp)]);
+c_intrp = InterpolateCytoplasm(pde_C,1:length(desired_times(1:param.interpolation_interval:end)),I,param);
+%[c_intrp] = InterpolateCytoplasm(sol_C,1:8:length(desired_times),I,props,param);
 m_intrp(isnan(m_intrp)) = 0;
 m_intrp = m_intrp * 1.8448 + 436.14;
 c_intrp = c_intrp / conversion * 452.7271;

@@ -45,7 +45,7 @@ for i = 1 : size( verts, 1 )
         end
     end
 end
-fprintf( 'Corrected the mesh for %d vertex replicas\n', cnt );
+%fprintf( 'Corrected the mesh for %d vertex replicas\n', cnt );
 
 % check for duplicated faces
 sf =  sort( faces, 2 );
@@ -59,12 +59,15 @@ end
 % plot the input mesh
 if display == 1
     plot3( verts( :, 1 ), verts( :, 2 ), verts( :, 3 ), 'k.' )
+	hold on;
 elseif display == 2
     patch( 'Faces', faces, 'Vertices', verts, 'FaceAlpha', 0, 'EdgeAlpha', 1 ); % display the mesh edges
+	hold on;
 elseif display == 3
     patch( 'Faces', faces, 'Vertices', verts, 'FaceColor', 'y', 'FaceAlpha', 0.75, 'EdgeAlpha', 0.75 ); % display the mesh
+	hold on;
 end
-hold on;
+
 
 % find cross-sections
 warning( 'off', 'MATLAB:triangulation:PtsNotInTriWarnId' ); % turn off Matlab warning about verts not accounted by faces
@@ -85,7 +88,7 @@ for s = 1 : nplanes
     d = dot( pn, verts - pr, 2 );
     zinds = find( abs( d ) < precision );
     if ~isempty( zinds )
-        fprintf( [ 'Plane crosses vertices [ ' repmat( '%d ', 1, length( zinds ) ) '] within precision %e!\n'], zinds, precision );
+        %fprintf( [ 'Plane crosses vertices [ ' repmat( '%d ', 1, length( zinds ) ) '] within precision %e!\n'], zinds, precision );
         verts( zinds, : ) = verts( zinds, : ) + ...
             repmat( planes.n( s, : ), length( zinds ), 1 ) * 2 * precision; % shift the vertices along the plane normal by 2 * precision
         % recalculate edges
