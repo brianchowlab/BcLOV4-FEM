@@ -103,7 +103,9 @@ function [Soln] = SolveNonLinear(param,solver_params)
         if param.debug;start = tic;end
         x0 = u_h;
         err = 100;
+        counter = 0;
         while err > param.tol
+            counter = counter + 1;
             %Jacobian
             solver_params.u_M = u_h(2*CN+1:2*CN+MN);
             solver_params.v_M = u_h(2*CN+MN+1:end);
@@ -130,13 +132,18 @@ function [Soln] = SolveNonLinear(param,solver_params)
             R = @(x0) blkdiag(K_phi,K_phi,K_psi,K_psi) * (x0 - u_h) - nonlinear_part(x0) - linear_part(u_h);
             RHS = -R(x0);
 
-            %if i == 1
-            %    [L,U] = ilu(J,struct('type','ilutp','droptol',1e-6));
-            %end
+            if counter > 10
+                disp('Convergence issue, using ilu preconditioner. This will cause a slowdown. This likely indicates an excessively large time-step.')
+                [L,U] = ilu(J,struct('type','ilutp','droptol',1e-6));
+                dx = gmres(J,RHS,5,param.tol/(10^(counter-10)),10,L,U,x0);
+            else
+                pre = spdiags(spdiags(J,0),0,2*CN+2*MN,2*CN+2*MN);
+                dx = gmres(J,RHS,5,param.tol,10,pre);
+            end
 
             %dx = gmres(J,RHS,5,1e-6,10,L,U);
-            pre = spdiags(spdiags(J,0),0,2*CN+2*MN,2*CN+2*MN);
-            dx = gmres(J,RHS,5,param.tol,10,pre);
+            %pre = spdiags(spdiags(J,0),0,2*CN+2*MN,2*CN+2*MN);
+            %dx = gmres(J,RHS,5,param.tol,10,pre);
             %dec = decomposition(J);
             %dx = dec \ -R(x0);
             err = norm(dx);

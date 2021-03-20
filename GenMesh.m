@@ -51,12 +51,16 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
 
         %Location of ellipsoid points in 2D (XY Plane)
         xu=r_a*cos(t);
-        yu=r_b*sin(t);
+        yu=r_b*sin(t);        
 
         %Project the 2D ellipsoid points into 3D
         x =  xu;
         y = zeros(size(xu));
         z = yu;
+        
+        %Flatten the bottom of the cell
+        z(z < -param.h/2) = -param.h;
+        z(z >= -param.h/2 & z < 0) = z(z >= -param.h/2 & z < 0)*2;       
         zc = z;
 
         %Rotate the points 
@@ -113,7 +117,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
     new_verts_c = [new_verts_c;cent_c(1),cent_c(2),param.h;cent_c(1),cent_c(2),-param.h];
     points_per_z_c(:,:,end) = verts_c(:,1:2);
     zc = [zc(2:end-1),0];
-
+    
     %Compute 3D nucleus
     new_verts_n = zeros(size(verts_n,1)*(param.extrude-1),3);
     tri_n = [];
@@ -301,7 +305,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
         h = h.Children;
         h(2).Visible = 'Off';
         h(3).Visible = 'Off';
-        h(4).Visible = 'Off';
-        h(5).Visible = 'Off';
+        %h(4).Visible = 'Off';
+        %h(5).Visible = 'Off';
     end
 end

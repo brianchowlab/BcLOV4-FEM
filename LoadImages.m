@@ -1,8 +1,9 @@
 function [contours,mask_il,I] = LoadImages(param)
     I = imread(param.im_file);
-    %I = imresize(I,[floor(size(I,1)/2),floor(size(I,2)/2)]);
+    %I = imresize(I,[floor(size(I,1)),floor(size(I,2))]);
     I = fliplr(flipud(I));
-
+    %I = imadjust(I);
+    
     %Select nucleus
     if strcmp(param.nucleus_roi_file,'NA')
         imshow(I)
@@ -53,4 +54,7 @@ function [contours,mask_il,I] = LoadImages(param)
     contours.cytoplasm = cytoplasm_contour;
     contours.nucleus = nucleus_contour;
     contours.il = il_contour;
+    
+    I = imread(param.concentration_im_file);
+    I = fliplr(flipud(I));
 end

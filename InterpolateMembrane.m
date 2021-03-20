@@ -1,11 +1,11 @@
 function [m_intrp] = InterpolateMembrane(I,desired_idx,TR,sol_M,param)
-    scale=1;
+    scale=param.downsample;
     samp_res = param.scale_len;
     axial_resolution = samp_res;
 
-    x = (0:scale:size(I,1)-1)*samp_res + samp_res/2;
-    y = (0:scale:size(I,2)-1)*samp_res + samp_res/2;
-    z = -param.h:param.scale_len:ceil(param.h/param.scale_len)*param.scale_len;
+    x = (0:scale:size(I,1)-1)*samp_res + scale*samp_res/2;
+    y = (0:scale:size(I,2)-1)*samp_res + scale*samp_res/2;
+    z = -param.h:param.scale_len*scale:ceil(param.h/param.scale_len/scale)*param.scale_len*scale;
 
     
     m_intrp = NaN(size(x,2),size(y,2),size(z,2),size(desired_idx,2),'single');
@@ -42,10 +42,10 @@ function [m_intrp] = InterpolateMembrane(I,desired_idx,TR,sol_M,param)
             Y = pt(:,2);
 
             %Convert interpolated values to pixels
-            X = round((X-samp_res/2)/samp_res)*samp_res + samp_res/2;
-            Y = round((Y-samp_res/2)/samp_res)*samp_res + samp_res/2;
-            [~,idx_x] = ismember(X,x);
-            [~,idx_y] = ismember(Y,y);
+            X = round((X-scale*samp_res/2)/samp_res/scale)*samp_res*scale + scale*samp_res/2;
+            Y = round((Y-scale*samp_res/2)/samp_res/scale)*samp_res*scale + scale*samp_res/2;
+            [~,idx_x] = ismembertol(X,x,1e-4);
+            [~,idx_y] = ismembertol(Y,y,1e-4);
             [C,ia,ic] = unique([idx_x,idx_y],'rows');
             C = [C,i*ones(size(C,1),1),k*ones(size(C,1),1)];
 

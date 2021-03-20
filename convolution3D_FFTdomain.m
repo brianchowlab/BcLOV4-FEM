@@ -32,6 +32,9 @@ else
     indDb=0;
 end
 
+%inVol = gpuArray(inVol);
+%inKer = gpuArray(inKer);
+
 % Size of the input volumes
 inVolSize=size(inVol);
 inVolSide=max(inVolSize);
@@ -45,7 +48,6 @@ for iDim=(1:3),
     inKer=fft(inKer,inVolSide+inKerSide-1,iDim);
     extr{iDim}=ceil((inKerSize(iDim)-1)/2)+(1:inVolSize(iDim));
 end
-
 % Multiplication of the Fourrier tranforms
 conv_FFT=inVol.*inKer;
 

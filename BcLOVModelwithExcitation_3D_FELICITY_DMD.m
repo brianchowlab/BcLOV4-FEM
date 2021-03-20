@@ -1,9 +1,9 @@
 %% Set parameters
-filename = 'params_DMD_250ms_10s_1.txt';
-fid = fopen(filename);
-params = textscan(fid,'%s %f','delimiter',' ','HeaderLines',5,'MultipleDelimsAsOne',1,'CommentStyle','%');
+filename = 'params_spatial_res';
+fid = fopen([filename,'.txt'],'r');
+params = textscan(fid,'%s %f','delimiter',' ','HeaderLines',6,'MultipleDelimsAsOne',1,'CommentStyle','%');
 fclose(fid);
-fid = fopen(filename);
+fid = fopen([filename,'.txt']);
 ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
 fclose(fid);
 param = cell2struct(num2cell(params{2}),string(params{1})');
@@ -11,7 +11,8 @@ param.im_file = ims_and_rois{2}{1};
 param.il_roi_file = ims_and_rois{2}{2};
 param.nucleus_roi_file = ims_and_rois{2}{3};
 param.cyto_roi_file = ims_and_rois{2}{4};
-param.z_stack = ims_and_rois{2}{5};
+param.concentration_im_file = ims_and_rois{2}{5};
+param.z_stack = ims_and_rois{2}{6};
 
 %Unit conversion
 unit_scaling_k_on_l_and_d = 1e15/6.02214076e23;%Convert from M-1 s-1 to um^3 s-1 molecules-1
@@ -37,6 +38,7 @@ conversion = 1e-6 * 6.022e23 * 1e-15;
 
 %% Build FEM matrices with FELICITY and solve.
 %cd FELICITY;FELICITY_paths;cd ..;
+
 addpath ./FELICITY
 FELICITY_paths
 
@@ -89,6 +91,7 @@ u_h = zeros(2*CN + 2*MN,1);
 %Convert from fluorescence to concentration
 param.conc = (mean(I(logical(mask_cyto_only(:))))-param.offset)/param.conc_ratio;
 %Convert from uM to molecules/um^3
+
 param.conc = param.conc * conversion;
 u_h((CN+1):2*CN) = param.conc*ones(CN,1);
 
@@ -114,18 +117,24 @@ PlotSol(Soln,photo_on_scale,CN,MN,props,param)
 pdem_C = createpde(1);
 gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
 pde_C=createPDEResults(pdem_C,sol_C(:,1:param.interpolation_interval:end),tlist(desired_times(1:param.interpolation_interval:end)),'time-dependent');
-save('data.mat','Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
-clear Soln u_C u_M v_C v_M
+save([filename,'.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
+clear Soln u_C u_M v_C v_M sol_C
 %% Interpolate 
 %[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
+c_intrp = InterpolateCytoplasm(pde_C,1:length(desired_times(1:param.interpolation_interval:end)),I,param);
+
 m_intrp = InterpolateMembrane(I,1:param.interpolation_interval:length(desired_times),props.pm_TR,sol_M,param);
 %m_intrp = ndSparse(m_intrp,[size(m_intrp)]);
-c_intrp = InterpolateCytoplasm(pde_C,1:length(desired_times(1:param.interpolation_interval:end)),I,param);
 %[c_intrp] = InterpolateCytoplasm(sol_C,1:8:length(desired_times),I,props,param);
 m_intrp(isnan(m_intrp)) = 0;
-m_intrp = m_intrp * 1.8448 + 436.14;
-c_intrp = c_intrp / conversion * 452.7271;
-c_intrp = m_intrp + c_intrp;
+%m_intrp = m_intrp * 1.8448;%1.3869
+%c_intrp = c_intrp / conversion * 452.7271;
+
+c_intrp = c_intrp/conversion * param.conc_ratio;
+%m_intrp = m_intrp * 1.8448 * param.conc_ratio/452.7271;
+m_intrp = m_intrp * 4;
+c_intrp(m_intrp ~= 0) = m_intrp(m_intrp~=0);
+clear sol_M m_intrp
 %%%%%%%%%%%%%FOR TOMORROW USE CONCENTRATION CALIBRATION TO GET TO
 %%%%%%%%%%%%%FLUORESCENCE
 %m_intrp = m_intrp - min(m_intrp(:));
@@ -144,7 +153,7 @@ c_intrp = m_intrp + c_intrp;
 
 %% Approximate PSF
 
-psf_params.size = [128,128,64];%[32,32,21]
+psf_params.size = [64,64,64];%[32,32,21]
 psf_params.NA = param.NA;
 psf_params.lambda = 610e-9;
 psf_params.M = param.mag;
@@ -155,5 +164,5 @@ psf_params.pZ = 0;%ceil(params.size(3)/2) * axial_resolution*1e-6;
 psf_params.oversampling = 2;
 [PSF_3D] = GenPSF(psf_params,param);
 %% Convolve with PSF
-[c_intrp_blurred] = ConvolvePSF(c_intrp,PSF_3D);
-WriteVideo(uint8(c_intrp_blurred/max(c_intrp_blurred(:))*255),ceil(size(c_intrp,3)/2),'out.avi',10,jet)
+[c_intrp_blurred] = ConvolvePSF(c_intrp,single(PSF_3D));
+WriteVideo(uint8(c_intrp_blurred/max(c_intrp_blurred(:))*255),ceil(size(c_intrp,3)/2),[filename,'.avi'],10,gray)

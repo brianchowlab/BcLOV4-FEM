@@ -1,12 +1,18 @@
 function [photo_on_scale,idx_excited] = ExcitationROI(mesh_c,mask_il,poly,param)
     z = -param.h:param.scale_len:ceil(param.h/param.scale_len)*param.scale_len;
     v = poly.il.Vertices;
-    c = mean(v);
+    c = [(max(v(:,1))+min(v(:,1)))/2,(max(v(:,2))+min(v(:,2)))/2];
+    
+    if param.excitation_type == 1
+        [il_3D,coords_il] = ExcitationVolumeDMD(mask_il,z,param);
+    else
+        [il_3D,coords_il] = ExcitationVolumeLaser(mask_il,z,param);
+    end
 
-    [il_3D,coords_il] = ExcitationVolumeDMD(mask_il,z,param);
+    
     temp = coords_il.X;
-    coords_il.X = coords_il.Y + c(2);
-    coords_il.Y = temp + c(1);
+    coords_il.X = coords_il.Y + c(1);
+    coords_il.Y = temp + c(2);
 
     v = mesh_c.Nodes';
     photo_on_scale = interp3(coords_il.Y,coords_il.X,coords_il.Z,il_3D,v(:,2),v(:,1),v(:,3));
