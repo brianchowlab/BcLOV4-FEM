@@ -33,11 +33,11 @@ conversion = 1e-6 * 6.022e23 * 1e-15;
 [contours,mask_il,I] = LoadImages(param);
 
 %% Make Mesh
-[mesh_c,poly,shp_n] = GenMesh(contours,param);
+[mesh_c,poly,tr_n] = GenMesh2D(contours,param);
 
 % Determine illuminated region
-[photo_on_scale,idx_excited] = ExcitationROI(mesh_c,mask_il,poly,param);
-
+idx_excited = inpolygon(mesh_c.Nodes(1,:),mesh_c.Nodes(2,:),poly.il.Vertices(:,1),poly.il.Vertices(:,2))';
+photo_on_scale = double(idx_excited);
 %% Build FEM matrices with FELICITY and solve.
 %cd FELICITY;FELICITY_paths;cd ..;
 
@@ -45,26 +45,25 @@ addpath ./FELICITY
 FELICITY_paths
 
 %Port 3D cytoplasm mesh into FELICITY
-Mesh = MeshTetrahedron(mesh_c.Elements',mesh_c.Nodes','Omega');
+Mesh = MeshTriangle(mesh_c.Elements',mesh_c.Nodes','Omega');
 
-props = MeshProps(Mesh,shp_n);
+props = MeshProps2D(Mesh);
 %plot(props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,1),props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,2),'o')
-[~,idx] = ismember(props.pm_surface_nodes,props.nodes,'rows');
-Mesh = Mesh.Append_Subdomain('2D','dOmega',props.pm_faces);
+Mesh = Mesh.Append_Subdomain('1D','dOmega',props.pm_edges);
 
 %Calculate which nodes are illuminated
 param.il_c = photo_on_scale;%inShape(shp_l,Mesh.Points);
 %Mapping from membrane nodes to cytoplasmic nodes
-param.il_m = photo_on_scale(idx);
+param.il_m = photo_on_scale(props.pm_surface_node_idx);
 
 % Define FE spaces
-C_RefElem_3D = ReferenceFiniteElement(lagrange_deg1_dim3());
-C_Space = FiniteElementSpace('C_h',C_RefElem_3D,Mesh,'Omega');
+C_RefElem_2D = ReferenceFiniteElement(lagrange_deg1_dim2());
+C_Space = FiniteElementSpace('C_h',C_RefElem_2D,Mesh,'Omega');
 C_Space = C_Space.Set_DoFmap(Mesh,uint32(Mesh.ConnectivityList));
 
-M_RefElem_2D = ReferenceFiniteElement(lagrange_deg1_dim2());
-M_Space = FiniteElementSpace('M_h',M_RefElem_2D,Mesh,'dOmega');
-M_Space = M_Space.Set_DoFmap(Mesh,uint32(props.pm_faces_renum));
+M_RefElem_1D = ReferenceFiniteElement(lagrange_deg1_dim1());
+M_Space = FiniteElementSpace('M_h',M_RefElem_1D,Mesh,'dOmega');
+M_Space = M_Space.Set_DoFmap(Mesh,uint32(props.pm_edges_renum));
 
 Domain_Names = {'Omega'; 'dOmega'};
 Omega_Embed = Mesh.Generate_Subdomain_Embedding_Data(Domain_Names);
@@ -83,7 +82,7 @@ solver_params.C_DoF = C_Space.DoFmap;
 solver_params.M_DoF = M_Space.DoFmap;
 solver_params.CN = CN;
 solver_params.MN = MN;
-solver_params.idx = idx;
+solver_params.idx = props.pm_surface_node_idx;
 
 mask_cyto_only = poly2mask(contours.cytoplasm(:,1),contours.cytoplasm(:,2),size(I,1),size(I,2))-poly2mask(contours.nucleus(:,1),contours.nucleus(:,2),size(I,1),size(I,2));
 u_h = zeros(2*CN + 2*MN,1);
@@ -105,7 +104,7 @@ solver_params.u_h = u_h;
 solver_params.u_M = u_h(2*CN+1:2*CN+MN);
 solver_params.v_M = u_h(2*CN+MN+1:end);
 
-Soln = SolveNonLinear(param,solver_params);
+Soln = SolveNonLinear2D(param,solver_params);
 
 u_C = Soln(1:CN,:);
 v_C = Soln((CN+1):2*CN,:);
@@ -117,13 +116,13 @@ sol_M = u_M + v_M;
 
 tlist = (0:param.num_steps)*param.dt;
 desired_times = (0:param.store_interval:param.num_steps)+1;
-PlotSol(Soln,photo_on_scale,CN,MN,props,param)
+PlotSol2D(Soln,photo_on_scale,CN,MN,props,param)
 
 pdem_C = createpde(1);
 gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
 pde_C=createPDEResults(pdem_C,sol_C(:,1:param.interpolation_interval:end),tlist(desired_times(1:param.interpolation_interval:end)),'time-dependent');
-save([filename,'.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
-clear Soln u_C u_M v_C v_M sol_C
+save([filename,'-nl-2D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
+%clear Soln u_C u_M v_C v_M sol_C
 %% Interpolate 
 %[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
 c_intrp = InterpolateCytoplasm(pde_C,1:length(desired_times(1:param.interpolation_interval:end)),I,param);
