@@ -8,11 +8,8 @@ function [Soln] = SolveLinear2D(param,solver_params)
     %Fetch initial FEM matrices
     solver_params.FEM_l = mex_ReactionDiffusion_Cell_l_2D_assemble(solver_params.FEM,solver_params.p,solver_params.c,...
         [],solver_params.embed,solver_params.C_DoF,solver_params.M_DoF);
-    solver_params.FEM_nl = mex_ReactionDiffusion_Cell_nl_2D_assemble(solver_params.FEM,solver_params.p,solver_params.c,[],...
-            solver_params.embed,solver_params.C_DoF,solver_params.M_DoF,solver_params.u_M,solver_params.v_M);
-        
+    
     [K_phi,K_psi,K_phi_phi,K_phi_psi,K_psi_phi,A_phi,A_psi]=FetchMatrices_linear_2D(solver_params);
-    %[B_phi,B_psi]=FetchMatrices_nonlinear_2D(solver_params);
     
     k_on_p_store = param.k_on_p;
 
@@ -52,62 +49,37 @@ function [Soln] = SolveLinear2D(param,solver_params)
     Step_1_LHS_dark = [u_C_1,u_C_2,u_C_3,u_C_4;v_C_1,v_C_2,v_C_3,v_C_4;u_M_1,u_M_2,u_M_3,u_M_4;v_M_1,v_M_2,v_M_3,v_M_4];
     Step_1_LHS_decomp_dark = decomposition(Step_1_LHS_dark);
     if param.debug;t_i = toc(start);disp(['Initial decomposition took ',num2str(t_i),'s.']);end
-    %Time discretisation via the fractional-step theta method
+    
+    %Time discretisation via backward (implicit) Euler method.
     Soln = zeros(2*MN + 2*CN,1+param.num_steps/param.store_interval);
     Soln(:,1) = u_h;
     k_on_vec = [];
     for ii = 1:param.num_steps  
-        %disp('-------------------------------------------------------');
         disp(['Step ', num2str(ii), ' of ', num2str(param.num_steps)]);
         if param.debug;start = tic;end
-        if mod(ii - 1,param.period/param.dt) <param.ex_duration/param.dt
+        if mod(ii - 1,param.period/param.dt) < param.ex_duration/param.dt
             k_on_vec = [k_on_vec,1];
             param.k_on_p = k_on_p_store;
             Step_1_LHS_decomp = Step_1_LHS_decomp_lit;
-            u_C_2 = -param.k_on_p*il_phi;
-            v_C_2 = @(theta) K_phi/(theta*param.dt)+param.D*A_phi+param.k_on_p*il_phi+param.k_on_d*param.S*K_phi_phi;
-            u_M_4 = -param.k_on_p*il_psi;
-            v_M_4 = @(theta) K_psi/(theta*param.dt)+param.D_m*A_psi+param.k_on_p*il_psi+param.k_off_d*K_psi;
         else
             k_on_vec = [k_on_vec,0];
             param.k_on_p = 0;
             Step_1_LHS_decomp = Step_1_LHS_decomp_dark;
-            u_C_2 = 0*il_phi;
-            v_C_2 = @(theta) K_phi/(theta*param.dt)+param.D*A_phi+param.k_on_d*param.S*K_phi_phi;
-            u_M_4 = 0*il_psi;
-            v_M_4 = @(theta) K_psi/(theta*param.dt)+param.D_m*A_psi+param.k_off_d*K_psi;
         end
 
-        main = tic;
         solver_params.u_M = u_h(2*CN+1:2*CN+MN);
         solver_params.v_M = u_h(2*CN+MN+1:end);
 
-        [B_phi,B_psi]=FetchMatrices_nonlinear_2D(solver_params);
-
-        u_C_nl_1 = param.k_on_l*B_phi;
-        v_C_n1_2 = param.k_on_d*B_phi;
-        u_M_nl_1 = -param.k_on_l*B_psi;
-        v_M_nl_2 = -param.k_on_d*B_psi;
-
-        RHS = [u_C_nl_1*u_h(1:CN);v_C_n1_2*u_h(CN+1:2*CN);u_M_nl_1*u_h(1:CN);v_M_nl_2*u_h(CN+1:2*CN)] + blkdiag(K_phi,K_phi,K_psi,K_psi)*u_h/sparse(param.theta*param.dt);
-
-        %RHS = blkdiag(K_phi,K_phi,K_psi,K_psi)*u_h/(param.theta*param.dt);
+        
+        RHS = blkdiag(K_phi,K_phi,K_psi,K_psi)*u_h/sparse(param.dt);
         u_h = Step_1_LHS_decomp\RHS;
+        
         if param.debug;t_i = toc(start);disp(['Sub-step 1 took ',num2str(t_i),'s.']);end
 
       
-        %if mod(ii - 1,period/dt) <= ex_duration/dt 
-        %    u_h = dMAT_on\RHS;
-        %    %Soln(:,ii+1) = gmres(MAT_on,RHS,10,1e-6,100,L_on,U_on,u_h);
-        %else
-        %    u_h = dMAT_off\RHS;
-        %    %Soln(:,ii+1) = gmres(MAT_off,RHS,10,1e-6,100,L_off,U_off,u_h);
-        %end
         if mod(ii,param.store_interval) == 0
             Soln(:,ii/param.store_interval+1) = u_h;
         end
-        if param.debug;t_i = toc(start);disp(['Sub-step 3 took ',num2str(t_i),'s.']);end
-        toc (main)
     end
     param.k_on_p = k_on_p_store;
     plot(k_on_vec)
