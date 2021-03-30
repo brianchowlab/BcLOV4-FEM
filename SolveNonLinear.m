@@ -60,12 +60,13 @@ function [Soln] = SolveNonLinear(param,solver_params)
     %Time discretisation via the fractional-step theta method
     Soln = zeros(2*MN + 2*CN,1+param.num_steps/param.store_interval);
     Soln(:,1) = u_h;
-
+    k_on_vec = [];
     for ii = 1:param.num_steps  
         %disp('-------------------------------------------------------');
         disp(['Step ', num2str(ii), ' of ', num2str(param.num_steps)]);
         if param.debug;start = tic;end
-        if mod(ii - 1,param.period/param.dt) <=param.ex_duration/param.dt
+        if mod(ii - 1,param.period/param.dt) <param.ex_duration/param.dt
+            k_on_vec = [k_on_vec,1];
             param.k_on_p = k_on_p_store;
             Step_1_LHS_decomp = Step_1_LHS_decomp_lit;
             u_C_2 = -param.k_on_p*il_phi;
@@ -73,6 +74,7 @@ function [Soln] = SolveNonLinear(param,solver_params)
             u_M_4 = -param.k_on_p*il_psi;
             v_M_4 = @(theta) K_psi/(theta*param.dt)+param.D_m*A_psi+param.k_on_p*il_psi+param.k_off_d*K_psi;
         else
+            k_on_vec = [k_on_vec,0];
             param.k_on_p = 0;
             Step_1_LHS_decomp = Step_1_LHS_decomp_dark;
             u_C_2 = 0*il_phi;
@@ -179,5 +181,5 @@ function [Soln] = SolveNonLinear(param,solver_params)
         toc (main)
     end
     param.k_on_p = k_on_p_store;
-    
+    plot(k_on_vec)
 end

@@ -1,5 +1,5 @@
 %% Set parameters
-filename = 'params_cell_2';
+filename = 'params_cell_4';
 
 fid = fopen([filename,'.txt']);
 ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');

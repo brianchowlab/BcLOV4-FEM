@@ -6,7 +6,10 @@ function [photo_on_scale,idx_excited] = ExcitationROI(mesh_c,mask_il,poly,param)
     if param.excitation_type == 1
         [il_3D,coords_il] = ExcitationVolumeDMD(mask_il,z,param);
     else
-        [il_3D,coords_il] = ExcitationVolumeLaser(mask_il,z,param);
+        %[il_3D,coords_il] = ExcitationVolumeLaser(mask_il,z,param);
+        photo_on_scale = ones(size(mesh_c.Nodes,2),1);
+        idx_excited = 1:size(mesh_c.Nodes,2);
+        return
     end
 
     

@@ -1,5 +1,6 @@
 function [contours,mask_il,I] = LoadImages(param)
-    I = imread(param.im_file);
+    temp = Tiff(param.im_file,'r');
+    I = read(temp);
     %I = imresize(I,[floor(size(I,1)),floor(size(I,2))]);
     I = fliplr(flipud(I));
     %I = imadjust(I);
@@ -39,12 +40,19 @@ function [contours,mask_il,I] = LoadImages(param)
         il_contour = il_contour{1};
     else
         roi = ReadImageJROI(param.il_roi_file);
-        il_contour = fliplr(size(I)) - roi.mnCoordinates;
+        if isfield(roi,'mnCoordinates')
+            il_contour = fliplr(size(I)) - roi.mnCoordinates;
+        else
+            t = roi.vnRectBounds;
+            a = [t(1),t(2);t(1)+t(4),t(2);t(1)+t(4),t(2)+t(3);t(1),t(2)+t(3)];
+            il_contour = a;
+        end
         mask_il = poly2mask(il_contour(:,1),il_contour(:,2),size(I,1),size(I,2));
     end
     
     if param.plot
-        imshow(I)
+        figure
+        imshow(I,[0,max(max(I(:)))])
         hold on;
         visboundaries(cytoplasm,'Color','r'); 
         visboundaries(nucleus,'Color','y');
@@ -55,6 +63,7 @@ function [contours,mask_il,I] = LoadImages(param)
     contours.nucleus = nucleus_contour;
     contours.il = il_contour;
     
-    I = imread(param.concentration_im_file);
+    temp = Tiff(param.concentration_im_file,'r');
+    I = read(temp);
     I = fliplr(flipud(I));
 end

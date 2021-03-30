@@ -24,8 +24,16 @@ function [props] = MeshProps(Mesh,shp_n)
     props.surface_vert_normal = props.surface_vert_normal(props.surface_node_idx,:);
     
     %Indices of nuclear surface nodes - relative to surface nodes
-    props.nucleus_surface_nodes_idx = inShape(shp_n,props.surface_nodes + 0.1*props.surface_vert_normal);%1257
-    props.nucleus_surface_nodes_idx = find(props.nucleus_surface_nodes_idx);
+    %Use alphaShape of nucleus to determine what surface nodes are on
+    %nucleus. This can lead to occasional errors if the tolerance is chosen
+    %poorly.
+    if size(alphaShape().Points,1) > 0
+        props.nucleus_surface_nodes_idx = inShape(shp_n,props.surface_nodes + 0.5*props.surface_vert_normal);%1257
+        props.nucleus_surface_nodes_idx = find(props.nucleus_surface_nodes_idx);
+    else
+        props.nucleus_surface_nodes_idx = [];
+    end
+        
     
     %Plasma membrane surface nodes
     props.pm_surface_nodes = props.surface_nodes;

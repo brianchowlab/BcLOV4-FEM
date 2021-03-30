@@ -1,16 +1,16 @@
 function [c_intrp] =InterpolateCytoplasm(pde_C,desired_idx,I,param)
-    axial_resolution = param.scale_len;
+    axial_resolution = param.axial_resolution;
     samp_res = param.scale_len;
     scale=param.downsample;
 
-    z = -param.h:param.scale_len*scale:ceil(param.h/param.scale_len/scale)*param.scale_len*scale;
+    z = -param.h:axial_resolution*scale:ceil(param.h/axial_resolution/scale)*axial_resolution*scale;
 
     % Cytoplasm
     x = (0:scale:(size(I,2)-1))*samp_res + scale*samp_res/2;
     y = (0:scale:(size(I,1)-1))*samp_res + scale*samp_res/2;
 
     [X,Y,Z] = meshgrid(x,y,z);
-    v = [Y(:),X(:),Z(:)];
+    v = [X(:),Y(:),Z(:)];
     
     %Interpolate onto the desired grid
     

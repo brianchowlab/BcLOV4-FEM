@@ -1,18 +1,20 @@
 %% Set parameters
-filename = 'params_spatial_res';
-fid = fopen([filename,'.txt'],'r');
-params = textscan(fid,'%s %f','delimiter',' ','HeaderLines',6,'MultipleDelimsAsOne',1,'CommentStyle','%');
-fclose(fid);
+filename = 'params_cell_7';
+
 fid = fopen([filename,'.txt']);
 ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
 fclose(fid);
-param = cell2struct(num2cell(params{2}),string(params{1})');
-param.im_file = ims_and_rois{2}{1};
-param.il_roi_file = ims_and_rois{2}{2};
-param.nucleus_roi_file = ims_and_rois{2}{3};
-param.cyto_roi_file = ims_and_rois{2}{4};
-param.concentration_im_file = ims_and_rois{2}{5};
-param.z_stack = ims_and_rois{2}{6};
+param = cell2struct(num2cell(ims_and_rois{2}),ims_and_rois{1}');
+
+fn = fieldnames(param);
+for k=1:numel(fn)
+    if(isnan(str2double((param.(fn{k})))))
+        param.(fn{k}) = param.(fn{k}){1};
+    else
+        param.(fn{k}) = str2double(param.(fn{k}){1});
+    end
+end
+
 
 %Unit conversion
 unit_scaling_k_on_l_and_d = 1e15/6.02214076e23;%Convert from M-1 s-1 to um^3 s-1 molecules-1
@@ -46,8 +48,8 @@ FELICITY_paths
 Mesh = MeshTetrahedron(mesh_c.Elements',mesh_c.Nodes','Omega');
 
 props = MeshProps(Mesh,shp_n);
-
-[~,idx] = ismember(props. pm_surface_nodes,props.nodes,'rows');
+%plot(props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,1),props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,2),'o')
+[~,idx] = ismember(props.pm_surface_nodes,props.nodes,'rows');
 Mesh = Mesh.Append_Subdomain('2D','dOmega',props.pm_faces);
 
 %Calculate which nodes are illuminated
@@ -90,6 +92,9 @@ u_h = zeros(2*CN + 2*MN,1);
 %state initially).
 %Convert from fluorescence to concentration
 param.conc = (mean(I(logical(mask_cyto_only(:))))-param.offset)/param.conc_ratio;
+%param.conc = 1.1552;
+%param.conc = 0.5385;
+
 %Convert from uM to molecules/um^3
 
 param.conc = param.conc * conversion;
@@ -117,8 +122,8 @@ PlotSol(Soln,photo_on_scale,CN,MN,props,param)
 pdem_C = createpde(1);
 gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
 pde_C=createPDEResults(pdem_C,sol_C(:,1:param.interpolation_interval:end),tlist(desired_times(1:param.interpolation_interval:end)),'time-dependent');
-save([filename,'.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
-clear Soln u_C u_M v_C v_M sol_C
+save([filename,'-nl-3D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
+%clear Soln u_C u_M v_C v_M sol_C
 %% Interpolate 
 %[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
 c_intrp = InterpolateCytoplasm(pde_C,1:length(desired_times(1:param.interpolation_interval:end)),I,param);
@@ -130,9 +135,9 @@ m_intrp(isnan(m_intrp)) = 0;
 %m_intrp = m_intrp * 1.8448;%1.3869
 %c_intrp = c_intrp / conversion * 452.7271;
 
-c_intrp = c_intrp/conversion * param.conc_ratio;
+c_intrp = c_intrp/conversion * param.conc_ratio + param.offset;
 %m_intrp = m_intrp * 1.8448 * param.conc_ratio/452.7271;
-m_intrp = m_intrp * 4;
+m_intrp = m_intrp * 1.85;
 c_intrp(m_intrp ~= 0) = m_intrp(m_intrp~=0);
 clear sol_M m_intrp
 %%%%%%%%%%%%%FOR TOMORROW USE CONCENTRATION CALIBRATION TO GET TO
@@ -152,17 +157,67 @@ clear sol_M m_intrp
 
 
 %% Approximate PSF
+filename = param.PSF;
+param.scale_z = 0.2;
+param.PSF_axial_ratio = param.scale_z/param.scale_len;
+tstack = Tiff(filename,'r');
 
-psf_params.size = [64,64,64];%[32,32,21]
-psf_params.NA = param.NA;
-psf_params.lambda = 610e-9;
-psf_params.M = param.mag;
-psf_params.ti0 = 100e-6;
-psf_params.resLateral = param.scale_len * 1e-6;%scale_len * 1e-6;
-psf_params.resAxial = param.scale_len * 1e-6;%scale_len * 1e-6;
-psf_params.pZ = 0;%ceil(params.size(3)/2) * axial_resolution*1e-6;
-psf_params.oversampling = 2;
-[PSF_3D] = GenPSF(psf_params,param);
+[i,j] = size(tstack.read());
+K = length(imfinfo(filename));
+data = zeros(i,j,K);
+data(:,:,1)  = tstack.read();
+for n = 2:K
+    tstack.nextDirectory()
+    data(:,:,n) = tstack.read();
+end
+
+PSF_3D = data;
+s = sum(PSF_3D,'all');
+PSF_3D = PSF_3D / s;
+
+[nx,ny,nz] = size(PSF_3D);
+cut=exp(-1:-1:-3)/s;
+
+
+[X,Y,Z]=meshgrid(-floor(nx/2):nx/2,-floor(ny/2):ny/2,-floor(nz/2):nz/2);
+X = X*param.scale_len;
+Y=Y*param.scale_len;
+Z=Z*param.scale_z;%0.2 for WF
+%z_interp = min(Z(:)):param.scale_len:max(Z(:));
+%[Xi,Yi,Zi]=meshgrid(-floor(nx/2):nx/2,-floor(ny/2):ny/2,z_interp);
+%PSF_3D = interp3(X,Y,Z,PSF_3D,Xi,Yi,Zi,'nearest');
+
+figure;
+a = gca;
+h = waitbar(0,'Please wait...');
+for k=1:numel(cut)
+    isonormals(X,Y,Z,PSF_3D,patch(isosurface(X,Y,Z,PSF_3D,cut(k)),'EdgeColor','none','FaceAlpha',1/k,'FaceColor',[1 (k-1)/max(1,numel(cut)-0.99) 0],'Parent',a));
+    waitbar(k / numel(cut))
+end
+close(h);
+view(35,45);
+axis('equal');
+lighting('gouraud');
+grid('on');
+camlight;
+set(gca,'XColor', 'none','YColor','none','ZColor','None')
+set(gca, 'xtick', [])
+set(gca, 'ytick', [])
+set(gca, 'ztick', [])
+axis equal
+
+
+
+% psf_params.size = [64,64,64];%[32,32,21]
+% psf_params.NA = param.NA;
+% psf_params.lambda = 610e-9;
+% psf_params.M = param.mag;
+% psf_params.ti0 = 100e-6;
+% psf_params.resLateral = param.scale_len * 1e-6;%scale_len * 1e-6;
+% psf_params.resAxial = param.scale_len * 1e-6;%scale_len * 1e-6;
+% psf_params.pZ = 0;%ceil(params.size(3)/2) * axial_resolution*1e-6;
+% psf_params.oversampling = 2;
+% [PSF_3D] = GenPSF(psf_params,param);
 %% Convolve with PSF
 [c_intrp_blurred] = ConvolvePSF(c_intrp,single(PSF_3D));
 WriteVideo(uint8(c_intrp_blurred/max(c_intrp_blurred(:))*255),ceil(size(c_intrp,3)/2),[filename,'.avi'],10,gray)
