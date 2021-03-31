@@ -27,7 +27,7 @@ function [props] = MeshProps(Mesh,shp_n)
     %Use alphaShape of nucleus to determine what surface nodes are on
     %nucleus. This can lead to occasional errors if the tolerance is chosen
     %poorly.
-    if size(alphaShape().Points,1) > 0
+    if size(shp_n.Points,1) > 0
         props.nucleus_surface_nodes_idx = inShape(shp_n,props.surface_nodes + 0.5*props.surface_vert_normal);%1257
         props.nucleus_surface_nodes_idx = find(props.nucleus_surface_nodes_idx);
     else
