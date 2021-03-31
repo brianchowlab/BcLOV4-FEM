@@ -91,9 +91,21 @@ u_h = zeros(2*CN + 2*MN,1);
 %Dark, cytosolic state initial condition (assuming no protein in lit
 %state initially).
 %Convert from fluorescence to concentration
-param.conc = (mean(I(logical(mask_cyto_only(:))))-param.offset)/param.conc_ratio;
+%param.conc = (mean(I(logical(mask_cyto_only(:))))-param.offset)/param.conc_ratio;
 %param.conc = 1.1552;
 %param.conc = 0.5385;
+
+data_file = split(filename,'.txt');
+data_file = data_file{1};
+data_file = split(data_file,'params_c');
+data_file = data_file{2};
+
+data_file = ['Cyto_C',data_file,'.csv'];
+
+data = readmatrix(data_file);
+data = data(1,2);
+param.conc = (data-param.offset)/param.conc_ratio;
+
 
 %Convert from uM to molecules/um^3
 
