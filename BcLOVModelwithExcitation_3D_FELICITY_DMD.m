@@ -1,5 +1,5 @@
 %% Set parameters
-filename = 'params_cell_7';
+filename = 'params_cell_1_1s_10dc';
 
 fid = fopen([filename,'.txt']);
 ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
@@ -50,6 +50,10 @@ Mesh = MeshTetrahedron(mesh_c.Elements',mesh_c.Nodes','Omega');
 props = MeshProps(Mesh,shp_n);
 %plot(props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,1),props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,2),'o')
 [~,idx] = ismember(props.pm_surface_nodes,props.nodes,'rows');
+%m = find(abs(Mesh.Points(:,3))<1);
+%m = intersect(m,idx);
+%m = Mesh.Points(m,:);
+%plot(m(:,1),m(:,2),'o')
 Mesh = Mesh.Append_Subdomain('2D','dOmega',props.pm_faces);
 
 %Calculate which nodes are illuminated
@@ -122,7 +126,7 @@ PlotSol(Soln,photo_on_scale,CN,MN,props,param)
 pdem_C = createpde(1);
 gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
 pde_C=createPDEResults(pdem_C,sol_C(:,1:param.interpolation_interval:end),tlist(desired_times(1:param.interpolation_interval:end)),'time-dependent');
-save([filename,'-nl-3D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
+%save([filename,'-nl-3D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
 %clear Soln u_C u_M v_C v_M sol_C
 %% Interpolate 
 %[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
