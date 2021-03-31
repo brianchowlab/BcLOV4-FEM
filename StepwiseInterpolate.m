@@ -1,17 +1,9 @@
-function [] = StepwiseInterpolate(pde_C,sol_M,props,param,conversion,I)
-%     psf_params.size = [64,64,64];%[32,32,21]
-%     psf_params.NA = param.NA;
-%     psf_params.lambda = 610e-9;
-%     psf_params.M = param.mag;
-%     psf_params.ti0 = 100e-6;
-%     psf_params.resLateral = param.scale_len * 1e-6;%scale_len * 1e-6;
-%     psf_params.resAxial = param.scale_len * 1e-6;%scale_len * 1e-6;
-%     psf_params.pZ = 0;%ceil(params.size(3)/2) * axial_resolution*1e-6;
-%     psf_params.oversampling = 2;
-%     [PSF_3D] = GenPSF(psf_params,param);
+function [] = StepwiseInterpolate(folder_name,pde_C,sol_M,props,param,conversion,I)
+    mkdir(['./',folder_name]);
+    mkdir(['./',folder_name,'_no_PSF']);
     filename = param.PSF;
-    param.scale_z = 0.2;
-    param.PSF_axial_ratio = param.scale_z/param.scale_len;
+    %param.scale_z = 0.2;
+    %param.PSF_axial_ratio = param.scale_z/param.scale_len;
     tstack = Tiff(filename,'r');
 
     [i,j] = size(tstack.read());
@@ -23,7 +15,7 @@ function [] = StepwiseInterpolate(pde_C,sol_M,props,param,conversion,I)
         data(:,:,n) = tstack.read();
     end
 
-    PSF_3D = data(1:2:end,1:2:end,1:2:end);
+    PSF_3D = data(1:end,1:end,1:end);
     s = sum(PSF_3D,'all');
     PSF_3D = PSF_3D / s;
 
@@ -34,7 +26,7 @@ function [] = StepwiseInterpolate(pde_C,sol_M,props,param,conversion,I)
     [X,Y,Z]=meshgrid(-floor(nx/2):nx/2,-floor(ny/2):ny/2,-floor(nz/2):nz/2);
     X = X*param.scale_len;
     Y=Y*param.scale_len;
-    Z=Z*param.scale_z;%0.2 for WF
+    Z=Z*param.axial_resolution;%0.2 for WF
     %z_interp = min(Z(:)):param.scale_len:max(Z(:));
     %[Xi,Yi,Zi]=meshgrid(-floor(nx/2):nx/2,-floor(ny/2):ny/2,z_interp);
     %PSF_3D = interp3(X,Y,Z,PSF_3D,Xi,Yi,Zi,'nearest');
@@ -59,7 +51,7 @@ function [] = StepwiseInterpolate(pde_C,sol_M,props,param,conversion,I)
     axis equal
 
 
-    for i=1:param.interpolation_interval:size(sol_M,2)
+    parfor (i=1:param.interpolation_interval:size(sol_M,2),2)
         i
         pdem_C = createpde(1);
         gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
@@ -80,6 +72,9 @@ function [] = StepwiseInterpolate(pde_C,sol_M,props,param,conversion,I)
         c_intrp(m_intrp ~= 0) = m_intrp(m_intrp~=0);
         %size(c_intrp)
         c_intrp_blurred = ConvolvePSF(c_intrp,single(PSF_3D));
-        imwrite(uint16(squeeze(c_intrp_blurred(:,:,ceil(size(c_intrp,3)/2)))),['./Cell-6/',num2str(i),'.png']);
+        %c_intrp_blurred = c_intrp;
+        folder_name_no_PSF = [folder_name,'_no_PSF'];
+        imwrite(uint16(squeeze(c_intrp_blurred(:,:,ceil(size(c_intrp,3)/2)))),['./',folder_name,'/',num2str(i),'.png']);
+        imwrite(uint16(squeeze(c_intrp(:,:,ceil(size(c_intrp,3)/2)))),['./',folder_name_no_PSF,'/',num2str(i),'.png']);
     end
 end
