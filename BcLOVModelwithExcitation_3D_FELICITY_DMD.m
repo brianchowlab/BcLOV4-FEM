@@ -1,5 +1,5 @@
 %% Set parameters
-filename = 'params_cell_1_1s_10dc';
+filename = 'params_cell_4_10s_1dc';
 
 fid = fopen([filename,'.txt']);
 ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
@@ -49,7 +49,7 @@ Mesh = MeshTetrahedron(mesh_c.Elements',mesh_c.Nodes','Omega');
 
 props = MeshProps(Mesh,shp_n);
 %plot(props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,1),props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,2),'o')
-[~,idx] = ismember(props.pm_surface_nodes,props.nodes,'rows');
+%[~,idx] = ismember(props.pm_surface_nodes,props.nodes,'rows');
 %m = find(abs(Mesh.Points(:,3))<1);
 %m = intersect(m,idx);
 %m = Mesh.Points(m,:);
