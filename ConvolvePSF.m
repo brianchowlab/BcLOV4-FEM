@@ -3,5 +3,6 @@ function [c_intrp_blurred] = ConvolvePSF(data,PSF)
     for i=1:size(data,4)%[1,size(desired_times,2)]%
         i/size(data,4)
         c_intrp_blurred(:,:,:,i) = convolution3D_FFTdomain(data(:,:,:,i),single(PSF));
+        %c_intrp_blurred(:,:,:,i) = convn(data(:,:,:,i),PSF),'same');
     end
 end
