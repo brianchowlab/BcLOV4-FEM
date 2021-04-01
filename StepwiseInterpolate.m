@@ -71,7 +71,7 @@ function [] = StepwiseInterpolate(folder_name,pde_C,sol_M,props,param,conversion
         m_intrp = m_intrp * 1.85;
         c_intrp(m_intrp ~= 0) = m_intrp(m_intrp~=0);
         %size(c_intrp)
-        c_intrp_blurred = ConvolvePSF(c_intrp,single(PSF_3D));
+        c_intrp_blurred = ConvolvePSF(c_intrp,PSF_3D);
         %c_intrp_blurred = c_intrp;
         folder_name_no_PSF = [folder_name,'_no_PSF'];
         imwrite(uint16(squeeze(c_intrp_blurred(:,:,ceil(size(c_intrp,3)/2)))),['./',folder_name,'/',num2str(i),'.png']);
