@@ -2,6 +2,7 @@ function [] = StepwiseInterpolate(folder_name,pde_C,sol_M,props,param,conversion
     mkdir(['./',folder_name]);
     mkdir(['./',folder_name,'_no_PSF']);
     filename = param.PSF;
+    param.downsample = 1;
     %param.scale_z = 0.2;
     %param.PSF_axial_ratio = param.scale_z/param.scale_len;
     tstack = Tiff(filename,'r');
@@ -51,8 +52,10 @@ function [] = StepwiseInterpolate(folder_name,pde_C,sol_M,props,param,conversion
     axis equal
 
 
-    parfor (i=1:param.interpolation_interval:size(sol_M,2),2)
-        i
+    %parfor (i=1:param.interpolation_interval:size(sol_M,2),2)
+    iter_vec = [1,2,3,4,5,6,26,51,101,201];
+    parfor (j=1:10,3)
+        i = iter_vec(j);
         pdem_C = createpde(1);
         gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
         if i == size(sol_M,2)
@@ -68,13 +71,13 @@ function [] = StepwiseInterpolate(folder_name,pde_C,sol_M,props,param,conversion
 
 
         c_intrp = c_intrp/conversion * param.conc_ratio + param.offset;
-        m_intrp = m_intrp * 1.85;
-        c_intrp(m_intrp ~= 0) = m_intrp(m_intrp~=0);
+        m_intrp = m_intrp * 1.2;
+        c_intrp(m_intrp ~= 0) = 0.5*c_intrp(m_intrp ~= 0) + m_intrp(m_intrp~=0);
         %size(c_intrp)
         c_intrp_blurred = ConvolvePSF(c_intrp,PSF_3D);
         %c_intrp_blurred = c_intrp;
         folder_name_no_PSF = [folder_name,'_no_PSF'];
-        imwrite(uint16(squeeze(c_intrp_blurred(:,:,ceil(size(c_intrp,3)/2)))),['./',folder_name,'/',num2str(i),'.png']);
-        imwrite(uint16(squeeze(c_intrp(:,:,ceil(size(c_intrp,3)/2)))),['./',folder_name_no_PSF,'/',num2str(i),'.png']);
+        imwrite(uint16(squeeze(c_intrp_blurred(:,:,ceil(size(c_intrp,3)/2)))),['./',folder_name,'/',num2str(i),'.tif']);
+        imwrite(uint16(squeeze(c_intrp(:,:,ceil(size(c_intrp,3)/2)))),['./',folder_name_no_PSF,'/',num2str(i),'.tif']);
     end
 end

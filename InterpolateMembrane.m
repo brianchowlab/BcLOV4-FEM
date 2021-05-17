@@ -26,12 +26,13 @@ function [m_intrp] = InterpolateMembrane(I,desired_idx,TR,sol_M,param)
             if length(polygons{i}) == 0
                 continue
             end
-            X = polygons{i}{1}(:,1);
-            Y = polygons{i}{1}(:,2);
+            [~,idx] = max(cell2mat(cellfun(@(c) length(c),polygons{i},'UniformOutput',false)));
+            X = polygons{i}{idx}(:,1);
+            Y = polygons{i}{idx}(:,2);
             X = [X;X(1)];
             Y = [Y;Y(1)];
 
-            pt = interparc(size(polygons{i}{1}(:,1),1)*5,X,Y,'linear');
+            pt = interparc(size(polygons{i}{idx}(:,1),1)*5,X,Y,'linear');
 
             %pt_sep = pdist(pt(1:2,:),'euclidean');
             pt = [pt,z(i)*ones(size(pt,1),1)];

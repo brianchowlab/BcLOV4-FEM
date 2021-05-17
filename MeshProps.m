@@ -23,12 +23,24 @@ function [props] = MeshProps(Mesh,shp_n)
     props.surface_vert_normal = vertexNormal(props.surface_TR);
     props.surface_vert_normal = props.surface_vert_normal(props.surface_node_idx,:);
     
+    %Centroids of elements
+    tr = triangulation(Mesh.ConnectivityList,Mesh.Points);
+    props.centroids = barycentricToCartesian(tr,[1:size(tr.ConnectivityList,1)]',repmat([1/4,1/4,1/4,1/4],[size(tr.ConnectivityList,1),1]));
+    
+    %Alphashape of centroids
+    props.centroidShape = alphaShape(props.centroids,10,'HoleThreshold',1e6);
+    
     %Indices of nuclear surface nodes - relative to surface nodes
     %Use alphaShape of nucleus to determine what surface nodes are on
     %nucleus. This can lead to occasional errors if the tolerance is chosen
     %poorly.
     if size(shp_n.Points,1) > 0
-        props.nucleus_surface_nodes_idx = inShape(shp_n,props.surface_nodes + 0.5*props.surface_vert_normal);%1257
+        %The face winding of the nuclear membrane can be confusing. The
+        %vertex normals either need to be + or - depending on how they were
+        %constructed
+        props.nucleus_surface_nodes_idx = inShape(shp_n,props.surface_nodes + .5*props.surface_vert_normal);
+        %props.nucleus_surface_nodes_idx = inShape(props.centroidShape,props.surface_nodes);
+        %props.nucleus_surface_nodes_idx = [];
         props.nucleus_surface_nodes_idx = find(props.nucleus_surface_nodes_idx);
     else
         props.nucleus_surface_nodes_idx = [];

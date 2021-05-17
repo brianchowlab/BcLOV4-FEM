@@ -257,6 +257,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
         Y = [Y;cent_n(2);cent_n(2)];
         Z = [Z;param.hn;-param.hn];
         shp_n = alphaShape(X,Y,Z,param.alpha_radius);
+        shp_n_alt = alphaShape(X,Y,Z + param.h,param.alpha_radius);
         %plot(shp_n,'FaceAlpha',0.5)
         %hold on
         %plot(pg)
@@ -302,7 +303,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
         %[elements,nodes] = boundaryFacets(shp_cn);
         %nodes = nodes';
         %elements = elements';
-        nodes = [nodes_c;nodes_n]';
+        nodes = [nodes_c;nodes_n]' + [0,0,param.h]';
         elements = [elements_c;elements_n +  size(nodes_c,1)]';
         model = createpde();
         gm_c = geometryFromMesh(model,nodes,elements);
@@ -311,6 +312,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
     else
        load(param.mesh,'mesh_c','shp_n');
     end
+    shp_n = shp_n_alt;
     if param.plot
         figure
         pdemesh(mesh_c,'FaceAlpha',0.1)

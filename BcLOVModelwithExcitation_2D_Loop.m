@@ -1,7 +1,6 @@
+function [] = BcLOVModelwithExcitation_3D_Linear_Loop(filename)
 %% Set parameters
-filename = 'params_cell_1';
-
-fid = fopen([filename,'.txt']);
+fid = fopen(filename);
 ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
 fclose(fid);
 param = cell2struct(num2cell(ims_and_rois{2}),ims_and_rois{1}');
@@ -15,6 +14,19 @@ for k=1:numel(fn)
     end
 end
 
+%%%%%%%%%%%%%%%%%%Manually Set
+param.k_off_p = 1/18.5;%0.2632;
+param.k_off_d = 0.0225;
+param.k_on_d = 1130;
+param.offset=104;
+param.dt = 1e-1;
+param.num_steps = 4000;
+param.store_interval = 20;
+param.tol = 1e-6;
+
+
+param.min_element_size = 0.05;
+param.max_element_size = 0.25;
 
 %Unit conversion
 unit_scaling_k_on_l_and_d = 1e15/6.02214076e23;%Convert from M-1 s-1 to um^3 s-1 molecules-1
@@ -38,6 +50,7 @@ conversion = 1e-6 * 6.022e23 * 1e-15;
 % Determine illuminated region
 idx_excited = inpolygon(mesh_c.Nodes(1,:),mesh_c.Nodes(2,:),poly.il.Vertices(:,1),poly.il.Vertices(:,2))';
 photo_on_scale = double(idx_excited);
+
 %% Build FEM matrices with FELICITY and solve.
 %cd FELICITY;FELICITY_paths;cd ..;
 
@@ -90,7 +103,19 @@ u_h = zeros(2*CN + 2*MN,1);
 %Dark, cytosolic state initial condition (assuming no protein in lit
 %state initially).
 %Convert from fluorescence to concentration
-param.conc = (mean(I(logical(mask_cyto_only(:))))-param.offset)/param.conc_ratio;
+
+data_file = split(filename,'.txt');
+data_file = data_file{1};
+data_file = split(data_file,'params_c');
+data_file = data_file{2};
+
+data_file = ['Cyto_C',data_file,'.csv'];
+
+data = readmatrix(data_file);
+data = data(1,2);
+%param.conc = (mean(I(logical(mask_cyto_only(:))))-param.offset)/param.conc_ratio;
+param.conc = (data-param.offset)/param.conc_ratio;
+
 %param.conc = 1.1552;
 %param.conc = 0.5385;
 
@@ -104,7 +129,7 @@ solver_params.u_h = u_h;
 solver_params.u_M = u_h(2*CN+1:2*CN+MN);
 solver_params.v_M = u_h(2*CN+MN+1:end);
 
-Soln = SolveNonLinear2D(param,solver_params);
+Soln = SolveLinear2D(param,solver_params);
 
 u_C = Soln(1:CN,:);
 v_C = Soln((CN+1):2*CN,:);
@@ -116,107 +141,11 @@ sol_M = u_M + v_M;
 
 tlist = (0:param.num_steps)*param.dt;
 desired_times = (0:param.store_interval:param.num_steps)+1;
-PlotSol2D(Soln,photo_on_scale,CN,MN,props,param)
 
 pdem_C = createpde(1);
 gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
+PlotSol2D(pdem_C,Soln,photo_on_scale,CN,MN,props,param)
+
 pde_C=createPDEResults(pdem_C,sol_C(:,1:param.interpolation_interval:end),tlist(desired_times(1:param.interpolation_interval:end)),'time-dependent');
-save([filename,'-nl-2D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
-%clear Soln u_C u_M v_C v_M sol_C
-%% Interpolate 
-%[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
-c_intrp = InterpolateCytoplasm(pde_C,1:length(desired_times(1:param.interpolation_interval:end)),I,param);
-
-m_intrp = InterpolateMembrane(I,1:param.interpolation_interval:length(desired_times),props.pm_TR,sol_M,param);
-%m_intrp = ndSparse(m_intrp,[size(m_intrp)]);
-%[c_intrp] = InterpolateCytoplasm(sol_C,1:8:length(desired_times),I,props,param);
-m_intrp(isnan(m_intrp)) = 0;
-%m_intrp = m_intrp * 1.8448;%1.3869
-%c_intrp = c_intrp / conversion * 452.7271;
-
-c_intrp = c_intrp/conversion * param.conc_ratio + param.offset;
-%m_intrp = m_intrp * 1.8448 * param.conc_ratio/452.7271;
-m_intrp = m_intrp * 1.85;
-c_intrp(m_intrp ~= 0) = m_intrp(m_intrp~=0);
-clear sol_M m_intrp
-%%%%%%%%%%%%%FOR TOMORROW USE CONCENTRATION CALIBRATION TO GET TO
-%%%%%%%%%%%%%FLUORESCENCE
-%m_intrp = m_intrp - min(m_intrp(:));
-%m_intrp(isnan(m_intrp)) = 0;
-%interp_props.idx_nan = isnan(m_intrp(:));
-%m_intrp(c_intrp(:) > 0 & nterp_props.idx_nan) = 0;
-%interp_props.idx_c = c_intrp(:) > 0;
-%interp_props.idx_c = interp_props.idx_c(1:size(interp_props.idx_nan,1)/size(c_intrp,4));
-%interp_props.idx_m = find(~interp_props.idx_nan(1:size(interp_props.idx_nan,1)/size(c_intrp,4)));
-
-%vol_int = CytoplasmVolume(I,interp_props,param);
-
-%WriteVideo(uint8(m_intrp/max(m_intrp(:))*255),72,'mem-ex.avi',2,jet)
-%WriteVideo(uint8(255*m_intrp/max(m_intrp(:))),72,'mem-ex.avi',2,jet)
-
-
-%% Approximate PSF
-filename = param.PSF;
-param.scale_z = 0.2;
-param.PSF_axial_ratio = param.scale_z/param.scale_len;
-tstack = Tiff(filename,'r');
-
-[i,j] = size(tstack.read());
-K = length(imfinfo(filename));
-data = zeros(i,j,K);
-data(:,:,1)  = tstack.read();
-for n = 2:K
-    tstack.nextDirectory()
-    data(:,:,n) = tstack.read();
+save([filename,'-l-2D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
 end
-
-PSF_3D = data;
-s = sum(PSF_3D,'all');
-PSF_3D = PSF_3D / s;
-
-[nx,ny,nz] = size(PSF_3D);
-cut=exp(-1:-1:-3)/s;
-
-
-[X,Y,Z]=meshgrid(-floor(nx/2):nx/2,-floor(ny/2):ny/2,-floor(nz/2):nz/2);
-X = X*param.scale_len;
-Y=Y*param.scale_len;
-Z=Z*param.scale_z;%0.2 for WF
-%z_interp = min(Z(:)):param.scale_len:max(Z(:));
-%[Xi,Yi,Zi]=meshgrid(-floor(nx/2):nx/2,-floor(ny/2):ny/2,z_interp);
-%PSF_3D = interp3(X,Y,Z,PSF_3D,Xi,Yi,Zi,'nearest');
-
-figure;
-a = gca;
-h = waitbar(0,'Please wait...');
-for k=1:numel(cut)
-    isonormals(X,Y,Z,PSF_3D,patch(isosurface(X,Y,Z,PSF_3D,cut(k)),'EdgeColor','none','FaceAlpha',1/k,'FaceColor',[1 (k-1)/max(1,numel(cut)-0.99) 0],'Parent',a));
-    waitbar(k / numel(cut))
-end
-close(h);
-view(35,45);
-axis('equal');
-lighting('gouraud');
-grid('on');
-camlight;
-set(gca,'XColor', 'none','YColor','none','ZColor','None')
-set(gca, 'xtick', [])
-set(gca, 'ytick', [])
-set(gca, 'ztick', [])
-axis equal
-
-
-
-% psf_params.size = [64,64,64];%[32,32,21]
-% psf_params.NA = param.NA;
-% psf_params.lambda = 610e-9;
-% psf_params.M = param.mag;
-% psf_params.ti0 = 100e-6;
-% psf_params.resLateral = param.scale_len * 1e-6;%scale_len * 1e-6;
-% psf_params.resAxial = param.scale_len * 1e-6;%scale_len * 1e-6;
-% psf_params.pZ = 0;%ceil(params.size(3)/2) * axial_resolution*1e-6;
-% psf_params.oversampling = 2;
-% [PSF_3D] = GenPSF(psf_params,param);
-%% Convolve with PSF
-[c_intrp_blurred] = ConvolvePSF(c_intrp,single(PSF_3D));
-WriteVideo(uint8(c_intrp_blurred/max(c_intrp_blurred(:))*255),ceil(size(c_intrp,3)/2),[filename,'.avi'],10,gray)

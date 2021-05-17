@@ -1,4 +1,4 @@
-function [] = PlotSol2D(Soln,photo_on_scale,CN,MN,props,param)
+function [] = PlotSol2D(pdem_C,Soln,photo_on_scale,CN,MN,props,param)
     idx_m = unique(props.pm_edges(:));
     idx_excited = find(photo_on_scale > 0.25);
     
@@ -16,10 +16,11 @@ function [] = PlotSol2D(Soln,photo_on_scale,CN,MN,props,param)
     
     figure
     %h1 = triplot(props.elements,props.nodes(:,1),props.nodes(:,2),sol_all(:,end));
-    h1 = patch('Faces',props.elements,'Vertices',props.nodes,'FaceVertexCData',sol_all(:,end),'FaceColor','flat');
+    %h1 = patch('Faces',props.elements,'Vertices',props.nodes,'FaceVertexCData',sol_all(:,end),'FaceColor','flat','EdgeAlpha',0);
+    pdeplot(pdem_C,'XYData',sol_all(:,end),'XYStyle','flat')
     colorbar
     colormap jet
-    view([-1,1,0.5])
+    %view([-1,1,0.5])
 
 
     tlist = (0:param.store_interval:param.num_steps)*param.dt;

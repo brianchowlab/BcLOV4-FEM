@@ -54,15 +54,16 @@ end
 param.k_off_p = 1/18.5;%0.2632;
 param.k_off_d = 0.0225;
 param.k_on_d = 1126;
-param.dt = 5e-2;
-param.num_steps = 4000;
-param.store_interval = 20;
+param.dt = 1e-2;
+param.num_steps = 20000;
+param.store_interval = 100;
 param.tol = 1e-4;
 param.scale_len = 0.1;
 param.power_density = 0.012;
 param.excitation_type = 1;
 param.conc_ratio = 505.52;
 param.offset = 125.35;
+param.alpha_radius = 8;
 
 %Unit conversion
 unit_scaling_k_on_l_and_d = 1e15/6.02214076e23;%Convert from M-1 s-1 to um^3 s-1 molecules-1

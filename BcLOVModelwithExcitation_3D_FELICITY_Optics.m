@@ -34,10 +34,10 @@ end
 % param.k_off_d = 0.0225;
 % param.k_on_d = 1130;
 % param.offset=104;
-% param.dt = 5e-2;
-% param.num_steps = 40;
-% param.store_interval = 20;
-% param.tol = 1e-4;
+param.dt = 2.5e-2;
+param.num_steps = 2400;
+param.store_interval = 4;
+param.tol = 1e-5;
 
 %Unit conversion
 unit_scaling_k_on_l_and_d = 1e15/6.02214076e23;%Convert from M-1 s-1 to um^3 s-1 molecules-1
@@ -53,19 +53,85 @@ param.ex_duration = param.period * param.duty_cycle/100;
 %Conversion from uM to molecules/um^3
 conversion = 1e-6 * 6.022e23 * 1e-15;
 
-param.min_element_size = 1;
-param.max_element_size = 5;
+param.min_element_size = 0.25;
+param.max_element_size = 0.75;
 
 
 %% Load image
 [contours,mask_il,I] = LoadImages(param);
 
 %% Make Mesh
-[mesh_c,poly,shp_n] = GenMesh(contours,param);
+[mesh_c,poly,shp_n] = GenMesh_Optics(contours,param);
 
 % Determine illuminated region
-[photo_on_scale,idx_excited] = ExcitationROI(mesh_c,mask_il,poly,param);
+z = 0:0.1:5;
+v = poly.il.Vertices;
+c = [(max(v(:,1))+min(v(:,1)))/2,(max(v(:,2))+min(v(:,2)))/2];
+[il_3D,coords_il] = ExcitationVolumeTIRF(mask_il,z,param);
 
+temp = coords_il.X;
+coords_il.X = coords_il.Y + c(1);
+coords_il.Y = temp + c(2);
+
+v = mesh_c.Nodes';
+photo_on_scale = interp3(coords_il.Y,coords_il.X,coords_il.Z,il_3D,v(:,2),v(:,1),v(:,3));
+photo_on_scale(isnan(photo_on_scale)) = 0;
+
+idx_excited = find(photo_on_scale > 0.25);
+if isempty(idx_excited)
+   disp('Warning: no excited nodes in ROI') 
+end
+%Plot
+%%
+if param.plot
+    cut=fliplr(logspace(log10(max(max(max(il_3D)))/4),log10(max(max(max(il_3D)))),5));
+
+
+    hold on
+    a = gca;
+
+    h = waitbar(0,'Please wait...');
+
+    for k=1:numel(cut)
+        isonormals(coords_il.Y,coords_il.X,coords_il.Z,il_3D,patch(isosurface(coords_il.X,coords_il.Y,coords_il.Z,il_3D,cut(k)),'EdgeColor','none','FaceAlpha',1/k,'FaceColor',[1 (k-1)/max(1,numel(cut)-0.99) 0],'Parent',a));
+        waitbar(k / numel(cut))
+    end
+    close(h);
+    view(35,45);
+    axis('tight');
+    lighting('gouraud');
+    grid('on');
+    camlight;
+    set(gca,'XColor', 'none','YColor','none','ZColor','None')
+    set(gca, 'xtick', [])
+    set(gca, 'ytick', [])
+    set(gca, 'ztick', [])
+    set(gcf,'Color','w')
+end
+clear x_il y_il z_il v temp coords_il il_3D
+%%
+figure
+pdemesh(mesh_c,'FaceAlpha',0.1,'EdgeColor','none','FaceColor',[0.5,0.5,0.5])
+h = gca;
+h = h.Children;
+h(2).Visible = 'Off';
+h(3).Visible = 'Off';
+view([1,0,0])
+cut = 0.1;
+a = gca;
+isonormals(coords_il.Y,coords_il.X,coords_il.Z,il_3D,patch(isosurface(coords_il.X,coords_il.Y,coords_il.Z,il_3D,cut),'EdgeColor','none','FaceAlpha',1,'FaceColor','b','Parent',a));
+ylim([27.5,33.5])
+%#648FFF - tirf
+%#FE6100 - 1P
+%#DC267F - 2p
+%%
+
+
+plot(mesh_c.Nodes(1,idx_excited)',mesh_c.Nodes(2,idx_excited)','ro')
+hold on
+%plot(mesh_c.Nodes(1,idx_excited)',mesh_c.Nodes(2,idx_excited)','ko')
+
+plot(poly.il)
 %% Build FEM matrices with FELICITY and solve.
 %cd FELICITY;FELICITY_paths;cd ..;
 
@@ -78,7 +144,7 @@ Mesh = MeshTetrahedron(mesh_c.Elements',mesh_c.Nodes','Omega');
 props = MeshProps(Mesh,shp_n);
 plot(props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,1),props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,2),'o')
 [~,idx] = ismember(props.pm_surface_nodes,props.nodes,'rows');
-m = find(abs(Mesh.Points(:,3))<.1);
+m = find(abs(Mesh.Points(:,3) - param.h)<0.25);
 m = intersect(m,idx);
 m = Mesh.Points(m,:);
 plot(m(:,1),m(:,2),'o')
@@ -168,8 +234,188 @@ PlotSol(Soln,photo_on_scale,CN,MN,props,param)
 pdem_C = createpde(1);
 gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
 pde_C=createPDEResults(pdem_C,sol_C(:,1:param.interpolation_interval:end),tlist(desired_times(1:param.interpolation_interval:end)),'time-dependent');
-save([filename,'-nl-3D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
+save([filename,'-TIRF-hr-1um-nl-3D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
 %clear Soln u_C u_M v_C v_M sol_C
+%% Interpolate  just at z = 0
+z = 0;
+scale =1;
+samp_res = param.scale_len;
+y = (0:scale:size(I,1)-1)*samp_res + scale*samp_res/2;
+x = (0:scale:size(I,2)-1)*samp_res + scale*samp_res/2;
+
+[X,Y] = meshgrid(x,y);
+bottom_nodes= find(props.pm_surface_nodes(:,3) == 0);
+plot(props.pm_surface_nodes(bottom_nodes,1),props.pm_surface_nodes(bottom_nodes,2),'o')
+bottom_sol = sol_M(bottom_nodes,:);
+m_intrp = NaN(size(X,1),size(X,2),size(bottom_sol,2));
+for i = 1:size(bottom_sol,2)
+    i
+    m_intrp(:,:,i) = griddata(props.pm_surface_nodes(bottom_nodes,1),props.pm_surface_nodes(bottom_nodes,2),bottom_sol(:,i),X,Y);
+end
+%Max at 301,305
+%%
+%load('TIRF_m_intrp.mat')
+%Max tirf, 33.31
+%Max 2P, 41.2413
+%Max 1P, 82.9356
+%1-100 are nan, 503-601 are nan
+sub_m = m_intrp - m_intrp(:,:,1);
+profile = squeeze(sub_m(:,305,:));
+x = -30:0.1:30;
+clipped_x = x(101:502);
+clipped = profile(101:502,:);
+
+wid = [];
+wid_m = [];
+cen = [];
+amp=[];
+max_height = [];
+resamp = min(clipped_x):0.01:max(clipped_x);
+for i=1:size(profile,2)
+    f = clipped(:,i);
+    %halfmax = (min(f) +max(f))/2;
+    fr = interp1(clipped_x,f,resamp);
+    halfmax = max(f)/2;
+    fifthmax = 33.31/10;
+    idx1 = find(fr>= halfmax,1,'first');
+    idx2 = find(fr>= halfmax,1,'last');
+    fwhm  = resamp(idx2) - resamp(idx1);
+    idx1_m = find(fr>= fifthmax,1,'first');
+    idx2_m = find(fr>= fifthmax,1,'last');
+    fwhm_m  = resamp(idx2_m) - resamp(idx1_m);
+    if size(fwhm_m,2)==0
+       fwhm_m = NaN; 
+    end
+    %f(175:230) = max(f);
+    f_g = fit(clipped_x',f,'gauss1','Start',[300,0,5],'Lower',[max(f)*1.2,-1,0],'Upper',[1000,1,100]);
+    %wid = [wid,f_g.c1];
+    wid = [wid,fwhm / 2.355];
+    wid_m = [wid_m,fwhm_m];
+    cen = [cen,f_g.b1];
+    amp = [amp,f_g.a1];
+    max_height = [max_height,max(f)];
+    if mod(i,60) == 0
+        plot(f_g,clipped_x,f)
+    end
+end
+wid(1) = 0;%0.75/sqrt(2*log(2));
+figure
+t = 0:0.1:60;
+plot(t,max_height,'k','LineWidth',2)
+xlabel('Time (s)')
+ylabel('Amplitude (molecules/um^2)')
+set(gca,'FontSize',30)
+box on
+set(gca,'linew',2)
+set(gca,'tickdir','out')
+box off
+xlim([0,60])
+set(gcf,'Position',[1200,1000,800,720])
+figure
+plot(t,wid,'k','LineWidth',2);
+
+
+ 
+xlabel('Time (s)')
+ylabel('Standard Deviation ({\mu}m)')
+set(gca,'FontSize',30)
+box on
+set(gca,'linew',2)
+set(gca,'tickdir','out')
+box off
+xlim([0,60])
+set(gcf,'Position',[1200,1000,800,720])
+
+figure
+plot(t,wid_m,'k','LineWidth',2);
+
+
+ 
+xlabel('Time (s)')
+ylabel('Width (um)')
+set(gca,'FontSize',30)
+box on
+set(gca,'linew',2)
+set(gca,'tickdir','out')
+box off
+xlim([0,60])
+set(gcf,'Position',[1200,1000,800,720])
+%%
+mem_sub = sol_M - sol_M(:,1);
+bottom_nodes= find(props.pm_surface_nodes(:,3) == 0);
+top_nodes = find(props.pm_surface_nodes(:,3) > 7);
+ratio = sum(mem_sub(bottom_nodes,:)) ./ (sum(mem_sub(bottom_nodes,:))+sum(mem_sub(top_nodes,:)));
+ratio(1) = 1;
+plot(ratio)
+%% Interpolate  just at z = 0
+z = 0;
+scale =1;
+samp_res = param.scale_len;
+y = (0:scale:size(I,1)-1)*samp_res + scale*samp_res/2;
+x = (0:scale:size(I,2)-1)*samp_res + scale*samp_res/2;
+desired_idx = 1:size(Soln,2);
+TR = props.pm_TR;
+m_intrp = NaN(size(y,2),size(x,2),size(z,2),size(desired_idx,2),'single');
+h = waitbar(0,'Interpolating membrane...');
+for k=1:size(m_intrp,4)
+    waitbar(k/size(m_intrp,4));
+    F = scatteredInterpolant(TR.Points(:,1),TR.Points(:,2),TR.Points(:,3),sol_M(:,desired_idx(k)));
+    planes.n = [zeros(size(z,2),2),ones(size(z,2),1)];
+    planes.r = [zeros(size(z,2),2),z'];
+    polygons = mesh_xsections( TR.Points,TR.ConnectivityList, planes, 1e-3, 0 );
+
+    P_m_i = {};
+    N_m_i = {};
+    for i=1:size(z,2)
+        if length(polygons{i}) == 0
+            continue
+        end
+        [~,idx] = max(cell2mat(cellfun(@(c) length(c),polygons{i},'UniformOutput',false)));
+        X = polygons{i}{idx}(:,1);
+        Y = polygons{i}{idx}(:,2);
+        X = [X;X(1)];
+        Y = [Y;Y(1)];
+
+        pt = interparc(size(polygons{i}{idx}(:,1),1)*5,X,Y,'linear');
+
+        %pt_sep = pdist(pt(1:2,:),'euclidean');
+        pt = [pt,z(i)*ones(size(pt,1),1)];
+        P_m_i{end+1} = pt;
+        %plot(polygons{1}{1}(:,1),polygons{1}{1}(:,2),'o')
+        %plot(pt(:,1),pt(:,2),'*')
+        N = F(pt);
+        N_m_i{end+1} = N;
+        X = pt(:,1);
+        Y = pt(:,2);
+
+
+        %Convert interpolated values to pixels
+        X = round((X-scale*samp_res/2)/samp_res/scale)*samp_res*scale + scale*samp_res/2;
+        Y = round((Y-scale*samp_res/2)/samp_res/scale)*samp_res*scale + scale*samp_res/2;
+        [~,idx_x] = ismembertol(X,x,1e-4);
+        [~,idx_y] = ismembertol(Y,y,1e-4);
+
+
+
+        [C,ia,ic] = unique([idx_x,idx_y],'rows');
+
+        C = [C,i*ones(size(C,1),1),k*ones(size(C,1),1)];
+        %Average function values when multiple points are in a pixel
+        pixel_val = zeros(size(C,1),1);
+        for j = 1:size(C,1)
+            idx = find(ic == j);
+            pixel_val(j) = mean(N(idx));
+        end 
+        %if k == 1 & i == floor(size(z,2)/2)
+        %   plot(C(:,2),pixel_val,'o') 
+        %end     
+
+        C=sub2ind(size(m_intrp),C(:,2),C(:,1),C(:,3),C(:,4));
+        m_intrp(C) = pixel_val;
+
+    end
+end
+close(h);
 %% Interpolate 
 %[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
 param.axial_resolution = 0.175;
@@ -216,7 +462,7 @@ gaussFilter = gaussFilter / sum (gaussFilter); % normalize
 
 profile = [];
 for i = 1:size(sub_slice,3)
-    temp = c_slice(:,:,i);
+    temp = sub_slice(:,:,i);
     %profile = [profile,temp(idx)];
     profile = [profile,conv(temp(idx),gaussFilter,'same')];
 end
@@ -273,13 +519,21 @@ clipped_x = dist(idx_min:idx_max);
 wid = [];
 cen = [];
 amp=[];
+resamp = min(clipped_x):0.01:max(clipped_x);
 for i=1:size(clipped,2)
     %f = clipped(:,i) - (clipped(1,i)+clipped(end,i))/2;
-    f = clipped(:,i) - clipped(1,i);
+    f = clipped(:,i) - clipped(end,i);
+    fr = interp1(clipped_x,f,resamp);
+    halfmax = max(f)/2;
+    idx1 = find(fr>= halfmax,1,'first');
+    idx2 = find(fr>= halfmax,1,'last');
+    %fwhm  = resamp(idx2) - resamp(idx1);
+    %fwhm = resamp(idx2) *2;
     %f(1:103) = flipud(f(105:207));
-    f(105:207) = flipud(f(1:103));
+    %f(105:207) = flipud(f(1:103));
     f_g = fit(clipped_x,f,'gauss1','Start',[300,0,5],'Lower',[0,-1,0],'Upper',[1000,1,100]);
     wid = [wid,f_g.c1];
+    %wid = [wid,fwhm / 2.355];
     cen = [cen,f_g.b1];
     amp = [amp,f_g.a1];
     if mod(i,60) == 0

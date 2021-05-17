@@ -44,7 +44,9 @@ function [contours,mask_il,I] = LoadImages(param)
             il_contour = fliplr(size(I)) - roi.mnCoordinates;
         else
             t = roi.vnRectBounds;
-            a = [t(1),t(2);t(1)+t(4),t(2);t(1)+t(4),t(2)+t(3);t(1),t(2)+t(3)];
+            %a = [t(1),t(2);t(1)+t(4),t(2);t(1)+t(4),t(2)+t(3);t(1),t(2)+t(3)];
+            %a = fliplr(size(I))-[t(1),t(2);t(1),t(4);t(3),t(4);t(3),t(2)];
+            a = fliplr(size(I)) - [t(2),t(1);t(4),t(1);t(4),t(3);t(2),t(3)];
             il_contour = a;
         end
         mask_il = poly2mask(il_contour(:,1),il_contour(:,2),size(I,1),size(I,2));

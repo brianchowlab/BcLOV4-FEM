@@ -1,6 +1,5 @@
 %% Set parameters
-%filename = 'params_cell_1_10s_1dc';
-filename = 'params_optics';
+filename = 'params_cell_7_10s_1dc';
 
 fid = fopen([filename,'.txt']);
 ims_and_rois = textscan(fid,'%s %s','delimiter',' ','MultipleDelimsAsOne',1,'CommentStyle','%');
@@ -17,28 +16,6 @@ for k=1:numel(fn)
 end
 
 
-% param.k_off_p = 1/18.5;%0.2632;
-% param.k_off_d = 0.0225;
-% param.k_on_d = 1130;
-% param.offset=104;
-% param.dt = 1e-1;
-% param.num_steps = 10;
-% param.store_interval = 10;
-% param.tol = 1e-3;
-% param.scale_len = 0.1;
-% param.excitation_type = 1;
-% param.conc_ratio = 505.52;
-% pram.offset = 125.35;
-
-% param.k_off_p = 1/18.5;%0.2632;
-% param.k_off_d = 0.0225;
-% param.k_on_d = 1130;
-% param.offset=104;
-% param.dt = 5e-2;
-% param.num_steps = 40;
-% param.store_interval = 20;
-% param.tol = 1e-4;
-
 %Unit conversion
 unit_scaling_k_on_l_and_d = 1e15/6.02214076e23;%Convert from M-1 s-1 to um^3 s-1 molecules-1
 param.k_on_d = param.k_on_d*unit_scaling_k_on_l_and_d;
@@ -52,11 +29,6 @@ param.k_on_p = param.quantum_yield_signaling_state * absorption_cross * photon_e
 param.ex_duration = param.period * param.duty_cycle/100;
 %Conversion from uM to molecules/um^3
 conversion = 1e-6 * 6.022e23 * 1e-15;
-
-param.min_element_size = 1;
-param.max_element_size = 5;
-
-
 %% Load image
 [contours,mask_il,I] = LoadImages(param);
 
@@ -76,12 +48,8 @@ FELICITY_paths
 Mesh = MeshTetrahedron(mesh_c.Elements',mesh_c.Nodes','Omega');
 
 props = MeshProps(Mesh,shp_n);
-plot(props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,1),props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,2),'o')
+%plot(props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,1),props.pm_surface_nodes(abs(props.pm_surface_nodes(:,3))<1,2),'o')
 [~,idx] = ismember(props.pm_surface_nodes,props.nodes,'rows');
-m = find(abs(Mesh.Points(:,3))<.1);
-m = intersect(m,idx);
-m = Mesh.Points(m,:);
-plot(m(:,1),m(:,2),'o')
 Mesh = Mesh.Append_Subdomain('2D','dOmega',props.pm_faces);
 
 %Calculate which nodes are illuminated
@@ -123,23 +91,9 @@ u_h = zeros(2*CN + 2*MN,1);
 %Dark, cytosolic state initial condition (assuming no protein in lit
 %state initially).
 %Convert from fluorescence to concentration
-%param.conc = (mean(I(logical(mask_cyto_only(:))))-param.offset)/param.conc_ratio;
+param.conc = (mean(I(logical(mask_cyto_only(:))))-param.offset)/param.conc_ratio;
 %param.conc = 1.1552;
 %param.conc = 0.5385;
-
-%For loading from file
-% data_file = split(filename,'.txt');
-% data_file = data_file{1};
-% data_file = split(data_file,'params_c');
-% data_file = data_file{2};
-% 
-% data_file = ['Cyto_C',data_file,'.csv'];
-% 
-% data = readmatrix(data_file);
-% data = data(1,2);
-% param.conc = (data-param.offset)/param.conc_ratio;
-
-param.conc = 1;
 
 %Convert from uM to molecules/um^3
 
@@ -151,7 +105,7 @@ solver_params.u_h = u_h;
 solver_params.u_M = u_h(2*CN+1:2*CN+MN);
 solver_params.v_M = u_h(2*CN+MN+1:end);
 
-Soln = SolveNonLinear(param,solver_params);
+Soln = SolveLinear3D(param,solver_params);
 
 u_C = Soln(1:CN,:);
 v_C = Soln((CN+1):2*CN,:);
@@ -168,11 +122,10 @@ PlotSol(Soln,photo_on_scale,CN,MN,props,param)
 pdem_C = createpde(1);
 gm_C_f = geometryFromMesh(pdem_C,props.nodes',props.elements');
 pde_C=createPDEResults(pdem_C,sol_C(:,1:param.interpolation_interval:end),tlist(desired_times(1:param.interpolation_interval:end)),'time-dependent');
-save([filename,'-nl-3D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
+save([filename,'-l-3D.mat'],'Soln','sol_M','I','contours','param','props','tlist','desired_times','pdem_C','gm_C_f');
 %clear Soln u_C u_M v_C v_M sol_C
 %% Interpolate 
 %[voxel_mem_area,pixel_map] = MembraneArea(I,props.surface_TR,param);
-param.axial_resolution = 0.175;
 c_intrp = InterpolateCytoplasm(pde_C,1:length(desired_times(1:param.interpolation_interval:end)),I,param);
 
 m_intrp = InterpolateMembrane(I,1:param.interpolation_interval:length(desired_times),props.pm_TR,sol_M,param);
@@ -184,126 +137,9 @@ m_intrp(isnan(m_intrp)) = 0;
 
 c_intrp = c_intrp/conversion * param.conc_ratio + param.offset;
 %m_intrp = m_intrp * 1.8448 * param.conc_ratio/452.7271;
-%m_intrp = m_intrp * 1.85;
-%c_intrp(m_intrp ~= 0) = m_intrp(m_intrp~=0);
-m_intrp = m_intrp * 1.2;
-c_intrp(m_intrp ~= 0) = 0.5*c_intrp(m_intrp ~= 0) + m_intrp(m_intrp~=0);
-
-for i = 1:size(c_intrp,4)
-	imwrite(uint16(squeeze(c_intrp(:,:,ceil(size(c_intrp,3)/2),i))),['./',folder_name_no_PSF,'/',num2str(i),'.tif']);
-end
-
-%% Unwrap membrane
-mem_slice = squeeze(m_intrp(:,:,ceil(size(m_intrp,3)/2),:));
-sub_slice = mem_slice - mem_slice(:,:,1);
-c_slice = c_intrp_blurred(:,:,ceil(size(m_intrp,3)/2),:);
-c_slice = c_slice - c_slice(:,:,1);
-[y,x] = find(sub_slice(:,:,100)>0);
-contour = polyshape(y,x,'Simplify',false);
-contour =bwtraceboundary(sub_slice(:,:,100)>0,[y(1),x(1)],'W');
-idx = sub2ind([size(mem_slice,1),size(mem_slice,2)],contour(:,1),contour(:,2));
-st = sub_slice(:,:,2);
-[~,idx_max] = max(st(idx));
-dist = [0;cumsum(sqrt(sum((contour(1:end-1,:) - contour(2:end,:)).^2,2)))] * param.scale_len;
-dist = dist - dist(idx_max);
-
-sigma = 5;
-sz = 30;    % length of gaussFilter vector
-x = linspace(-sz / 2, sz / 2, sz);
-gaussFilter = exp(-x .^ 2 / (2 * sigma ^ 2));
-gaussFilter = gaussFilter / sum (gaussFilter); % normalize
-
-
-profile = [];
-for i = 1:size(sub_slice,3)
-    temp = c_slice(:,:,i);
-    %profile = [profile,temp(idx)];
-    profile = [profile,conv(temp(idx),gaussFilter,'same')];
-end
-
-%Circularly permute
-offset = idx_max - floor(size(profile,1)/2);
-idx_all = [(offset+1):size(profile,1),1:offset];
-dist = dist(idx_all);
-dist(end-offset+1:end) = dist(end-offset+1:end) - dist(end-offset+1) + dist(end-offset);
-profile = profile(idx_all,:);
-
-low = -7.5;
-high = 7.5;
-[~,idx_min] = min(abs(dist- low));
-[~,idx_max] = min(abs(dist- high));
-%idx_min = 1;
-%idx_max = size(profile,1);
-clipped = profile(idx_min:idx_max,:);
-clipped_x = dist(idx_min:idx_max);
-ti = 0:0.1:60;
-to_show = clipped ./ max(clipped(:));
-h=heatmap(to_show)
-set(h.NodeChildren(3), 'XTickLabelRotation', 0);
-h.GridVisible = 'off';
-h.Colormap = jet;
-%h.ColorLimits = [0,prctile(f_post(:),99.9)];
-h.ColorLimits = [0,1];
-h.XLabel = 'Time (s)';
-h.YLabel = 'Position ({\mu}m)';
-cdl = h.XDisplayLabels; 
-%xd = num2cell(t_post);
-xd = repmat(NaN,size(cdl,1), size(cdl,2));
-xd(1:150:end) = string(ti(1:150:end))';
-h.XDisplayLabels = xd;
-cdl = h.YDisplayLabels; 
-%xd = num2cell(t_post);
-xd = repmat(NaN,size(cdl,1), size(cdl,2));
-xd(1:20:end) = string(clipped_x(1:20:end))';
-h.YDisplayLabels = xd;
-h = gca;
-h.FontSize = 18;
-
-%%
-low = -7.5;
-high = 7.5;
-[~,idx_min] = min(abs(dist- low));
-[~,idx_max] = min(abs(dist- high));
-%idx_min = 1;
-%idx_max = size(profile,1);
-clipped = profile(idx_min:idx_max,:);
-clipped_x = dist(idx_min:idx_max);
-
-
-wid = [];
-cen = [];
-amp=[];
-for i=1:size(clipped,2)
-    %f = clipped(:,i) - (clipped(1,i)+clipped(end,i))/2;
-    f = clipped(:,i) - clipped(1,i);
-    %f(1:103) = flipud(f(105:207));
-    f(105:207) = flipud(f(1:103));
-    f_g = fit(clipped_x,f,'gauss1','Start',[300,0,5],'Lower',[0,-1,0],'Upper',[1000,1,100]);
-    wid = [wid,f_g.c1];
-    cen = [cen,f_g.b1];
-    amp = [amp,f_g.a1];
-    if mod(i,60) == 0
-        plot(f_g,clipped_x,f)
-    end
-end
-wid(1) = 0;%0.75/sqrt(2*log(2));
-figure
-t = 0:0.1:60;
-plot(t,wid,'k','LineWidth',2);
-
-
- 
-xlabel('Time (s)')
-ylabel('Standard Deviation ({\mu}m)')
-set(gca,'FontSize',30)
-box on
-set(gca,'linew',2)
-set(gca,'tickdir','out')
-box off
-xlim([0,15])
-%xticks([0,5,10,15]);
-%yticks([0,1,2,3,4,5,6])
-%clear sol_M m_intrp
+m_intrp = m_intrp * 1.85;
+c_intrp(m_intrp ~= 0) = m_intrp(m_intrp~=0);
+clear sol_M m_intrp
 %%%%%%%%%%%%%FOR TOMORROW USE CONCENTRATION CALIBRATION TO GET TO
 %%%%%%%%%%%%%FLUORESCENCE
 %m_intrp = m_intrp - min(m_intrp(:));
@@ -322,8 +158,8 @@ xlim([0,15])
 
 %% Approximate PSF
 filename = param.PSF;
-%param.scale_z = 0.16;
-%param.PSF_axial_ratio = param.scale_z/param.scale_len;
+param.scale_z = 0.2;
+param.PSF_axial_ratio = param.scale_z/param.scale_len;
 tstack = Tiff(filename,'r');
 
 [i,j] = size(tstack.read());
@@ -346,7 +182,7 @@ cut=exp(-1:-1:-3)/s;
 [X,Y,Z]=meshgrid(-floor(nx/2):nx/2,-floor(ny/2):ny/2,-floor(nz/2):nz/2);
 X = X*param.scale_len;
 Y=Y*param.scale_len;
-Z=Z*param.axial_resolution;%0.2 for WF
+Z=Z*param.scale_z;%0.2 for WF
 %z_interp = min(Z(:)):param.scale_len:max(Z(:));
 %[Xi,Yi,Zi]=meshgrid(-floor(nx/2):nx/2,-floor(ny/2):ny/2,z_interp);
 %PSF_3D = interp3(X,Y,Z,PSF_3D,Xi,Yi,Zi,'nearest');
@@ -378,10 +214,10 @@ axis equal
 % psf_params.M = param.mag;
 % psf_params.ti0 = 100e-6;
 % psf_params.resLateral = param.scale_len * 1e-6;%scale_len * 1e-6;
-% psf_params.resAxial = param.axial_resolution * 1e-6;%scale_len * 1e-6;
+% psf_params.resAxial = param.scale_len * 1e-6;%scale_len * 1e-6;
 % psf_params.pZ = 0;%ceil(params.size(3)/2) * axial_resolution*1e-6;
 % psf_params.oversampling = 2;
 % [PSF_3D] = GenPSF(psf_params,param);
 %% Convolve with PSF
 [c_intrp_blurred] = ConvolvePSF(c_intrp,single(PSF_3D));
-%WriteVideo(uint8(c_intrp_blurred/max(c_intrp_blurred(:))*255),ceil(size(c_intrp,3)/2),[filename,'.avi'],10,gray)
+WriteVideo(uint8(c_intrp_blurred/max(c_intrp_blurred(:))*255),ceil(size(c_intrp,3)/2),[filename,'.avi'],10,gray)

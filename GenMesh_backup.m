@@ -230,7 +230,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
         X = [X;cent_c(1);cent_c(1)];
         Y = [Y;cent_c(2);cent_c(2)];
         Z = [Z;param.h;-param.h];
-        shp_c = alphaShape(X,Y,Z,param.alpha_radius);
+        shp_c = alphaShape(X,Y,Z,2);
         %plot(shp_c,'FaceAlpha',0.5)
         %hold on
         %plot(pg)
@@ -256,7 +256,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
         X = [X;cent_n(1);cent_n(1)];
         Y = [Y;cent_n(2);cent_n(2)];
         Z = [Z;param.hn;-param.hn];
-        shp_n = alphaShape(X,Y,Z,param.alpha_radius);
+        shp_n = alphaShape(X,Y,Z,1);
         %plot(shp_n,'FaceAlpha',0.5)
         %hold on
         %plot(pg)
@@ -276,7 +276,7 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
         x = x(in);
         y = y(in);
         z = z(in);
-        [elements_c,nodes] = boundaryFacets(shp_c);
+        [~,nodes] = boundaryFacets(shp_c);
         x = [x;nodes(:,1)];
         y = [y;nodes(:,2)];
         z = [z;nodes(:,3)];
@@ -284,26 +284,19 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
         x = x(~in);
         y = y(~in);
         z = z(~in);
-        nodes_c = nodes;
-        [elements_n,nodes] = boundaryFacets(shp_n);
-        elements_n = fliplr(elements_n);
+        [~,nodes] = boundaryFacets(shp_n);
         x = [x;nodes(:,1)];
         y = [y;nodes(:,2)];
         z = [z;nodes(:,3)];
-        nodes_n = nodes;
 
         shp_cn = alphaShape(x,y,z,param.alpha_radius);
         numRegions(shp_cn)
         plot(shp_cn,'FaceAlpha',0.5)
         figure
-        
-        
         %-------------Mesh cytoplasm/nuclear void using built in mesh generator-------------%
-        %[elements,nodes] = boundaryFacets(shp_cn);
-        %nodes = nodes';
-        %elements = elements';
-        nodes = [nodes_c;nodes_n]';
-        elements = [elements_c;elements_n +  size(nodes_c,1)]';
+        [elements,nodes] = boundaryFacets(shp_cn);
+        nodes = nodes';
+        elements = elements';
         model = createpde();
         gm_c = geometryFromMesh(model,nodes,elements);
         %pdegplot(model,'CellLabels','on','FaceAlpha',0.5)
