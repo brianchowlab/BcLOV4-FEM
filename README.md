@@ -13,6 +13,13 @@ The model recapitulates salient features observed experimentally, including near
 
 <b>Dependencies:</b>
   
-MATLAB with PDE Toolbox. Development was done with MATLAB R2019b, may work for earlier versions.
+-MATLAB with PDE Toolbox. Development was done with MATLAB R2019b, may work for earlier versions.
+-FELICITY toolbox for MATLAB (https://www.mathworks.com/matlabcentral/fileexchange/31141-felicity). Packaged in this GitHub repository.
+-convolution3D_FFTdomain (https://www.mathworks.com/matlabcentral/fileexchange/35613-3d-convolution-in-the-fft-domain?s_tid=srchtitle). Used for fast 3D convolution of model output with microscope PSF. Packaged in ths GitHub repository.
+-interparc (https://www.mathworks.com/matlabcentral/fileexchange/34874-interparc?s_tid=srchtitle). Used for interpolation along the membrane. Packaged in ths GitHub repository.
+-ndSparse (https://www.mathworks.com/matlabcentral/fileexchange/29832-n-dimensional-sparse-arrays?s_tid=srchtitle). Used for efficient memory handling. Packaged in ths GitHub repository.
+-readImageJROI (https://www.mathworks.com/matlabcentral/fileexchange/32479-readimagejroi?s_tid=srchtitle). Used for reading in ROIs from imageJ. Packaged in this GitHub repository.
+-mesh_xsections (https://www.mathworks.com/matlabcentral/fileexchange/70238-mesh_xsections?s_tid=srchtitle). Used for membrane interpolation. Packaged in this GitHub repository.
+
 
 <b>Instructions for Use:</b>
