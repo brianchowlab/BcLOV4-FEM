@@ -254,7 +254,7 @@ for i = 1:size(bottom_sol,2)
 end
 %Max at 301,305
 %%
-%load('TIRF_m_intrp.mat')
+%load('2P_m_intrp.mat')
 %Max tirf, 33.31
 %Max 2P, 41.2413
 %Max 1P, 82.9356
@@ -264,6 +264,28 @@ profile = squeeze(sub_m(:,305,:));
 x = -30:0.1:30;
 clipped_x = x(101:502);
 clipped = profile(101:502,:);
+
+%%
+figure
+plot(x,profile(:,[2,3,6,11,21]),'LineWidth',2)
+legend('0.1s','.2s','.5s','1s','2s')
+set(gca,'linew',2)
+set(gca,'tickdir','out')
+ylim([0,1.05*max(profile(:))])
+xlim([-20,20])
+%xticks(['-30','-15','0','15','30'])
+box off
+figure
+plot(x,profile(:,[31,101,201,401,601]),'LineWidth',2)
+legend('2s','10s','20s','40s','60s')
+set(gca,'linew',2)
+set(gca,'tickdir','out')
+box off
+ylim([0,1.05*max(profile(:))])
+xlim([-20,20])
+
+
+%%
 
 wid = [];
 wid_m = [];
@@ -276,7 +298,7 @@ for i=1:size(profile,2)
     %halfmax = (min(f) +max(f))/2;
     fr = interp1(clipped_x,f,resamp);
     halfmax = max(f)/2;
-    fifthmax = 33.31/10;
+    fifthmax = 82.9356/2;
     idx1 = find(fr>= halfmax,1,'first');
     idx2 = find(fr>= halfmax,1,'last');
     fwhm  = resamp(idx2) - resamp(idx1);
