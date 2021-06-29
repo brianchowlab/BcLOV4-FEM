@@ -32,7 +32,7 @@ Download the repository and open up the driver script. Add the "Functions" folde
 
 Parameter files:
 
-im_file XYZ.tif                     Image file name
+im_file XYZ.tif                     Image file name. 
 il_roi_file XYZ.roi                 Illumination ROI, can be NA  
 nucleus_roi_file XYZ.roi            Nucleus ROI, can be NA  
 cyto_roi_file XYZ.roi               Cytosol ROI, can be NA
