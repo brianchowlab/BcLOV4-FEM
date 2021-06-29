@@ -140,6 +140,8 @@ This will predict the excitation volume from the illumination ROI. The result sh
 <br/>
 <br/>
 <br/>
+<br/>
+<br/>
 
 ### Step 5: Run simulation
 Running the next code block will start the simulation.
