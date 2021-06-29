@@ -102,6 +102,9 @@ This will load up the cell image. Draw a box in the center of the nucleus to see
 <br/>
 <br/>
 <br/>
+<br/>
+<br/>
+<br/>
 
 ### Step 3: Meshing
 Run: <br/>
@@ -114,9 +117,6 @@ This will generate the mesh using the prameters set in the prameter file and usi
 <a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Example/Outputs/Mesh.png?raw=true" align="left" width="350" ></a>
 <a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Example/Outputs/Mesh_alt.png?raw=true" align="left" width="350" ></a>
 
-<br/>
-<br/>
-<br/>
 <br/>
 <br/>
 <br/>
