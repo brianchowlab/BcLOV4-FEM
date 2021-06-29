@@ -102,9 +102,6 @@ This will load up the cell image. Draw a box in the center of the nucleus to see
 <br/>
 <br/>
 <br/>
-<br/>
-<br/>
-<br/>
 
 ### Step 3: Meshing
 Run: <br/>
