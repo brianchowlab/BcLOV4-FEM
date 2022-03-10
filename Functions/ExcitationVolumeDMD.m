@@ -1,7 +1,8 @@
 function [il_3D,coords] = ExcitationVolumeDMD(mask_il,z,params)
 
     mask = mask_il';
-    res = params.scale_len;
+    res_x = params.scale_len_x;
+    res_y = params.scale_len_y;
     alpha = asind(params.NA/params.immersion_n);
     
     within_aperture = @(x,y,z,xo,yo,zo) sqrt((x-xo).^2 + (y-yo).^2) ./ abs(z-zo) < tand(alpha);
@@ -11,10 +12,9 @@ function [il_3D,coords] = ExcitationVolumeDMD(mask_il,z,params)
     x0 = min(x); y0 = min(y) ;
     x1 = max(x); y1 = max(y) ;
     on = mask(y0:y1,x0:x1);
-    %on = imresize(on,upsample);
     
-    X = tand(alpha) * min(z) - size(on,2)/2 * res:res:tand(alpha) * max(z) + size(on,2)/2 * res;
-    Y = tand(alpha) * min(z) - size(on,1)/2 * res:res:tand(alpha) * max(z) + size(on,1)/2 * res;
+    X = tand(alpha) * min(z) - size(on,2)/2 * res_x:res_x:tand(alpha) * max(z) + size(on,2)/2 * res_x;
+    Y = tand(alpha) * min(z) - size(on,1)/2 * res_y:res_y:tand(alpha) * max(z) + size(on,1)/2 * res_y;
 
     [X,Y,Z] = meshgrid(X,Y,z);
     coords.X = X;
@@ -40,5 +40,5 @@ function [il_3D,coords] = ExcitationVolumeDMD(mask_il,z,params)
     end
     irradiance_integ = C * sum(on_uncropped,'all');
     irradiance_integ(:,:,ceil(size(z,2)/2)) = on_uncropped;
-    il_3D = irradiance_integ;%permute(irradiance_integ,[2,1,3]);
+    il_3D = irradiance_integ;
 end

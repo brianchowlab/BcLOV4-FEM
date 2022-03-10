@@ -38,7 +38,7 @@ function [props] = MeshProps(Mesh,shp_n)
         %The face winding of the nuclear membrane can be confusing. The
         %vertex normals either need to be + or - depending on how they were
         %constructed
-        props.nucleus_surface_nodes_idx = inShape(shp_n,props.surface_nodes + .5*props.surface_vert_normal);
+        props.nucleus_surface_nodes_idx = inShape(shp_n,props.surface_nodes + .25*props.surface_vert_normal);
         %props.nucleus_surface_nodes_idx = inShape(props.centroidShape,props.surface_nodes);
         %props.nucleus_surface_nodes_idx = [];
         props.nucleus_surface_nodes_idx = find(props.nucleus_surface_nodes_idx);

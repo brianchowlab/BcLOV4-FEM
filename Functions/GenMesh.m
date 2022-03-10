@@ -4,16 +4,10 @@ function [mesh_c,poly,shp_n] = GenMesh(contours,param)
     %that to seed the MATLAB mesh generation function from the PDE toolbox.
 
     %-------------Pre-compute polyshapes/centroids-------------%   
-    %Polyshapes get rid of co-linear points present in the contours.
-    %Illuminated region
-    %pg_il = polyshape([contours.il]*param.scale_len);
-
-    %Nucleus/cytoplasm
-
-    pg = polyshape([contours.cytoplasm;contours.nucleus]*param.scale_len);
-    pg_c = polyshape([contours.cytoplasm]*param.scale_len);
-    pg_n = polyshape([contours.nucleus]*param.scale_len);
-    pg_il = polyshape([contours.il]*param.scale_len);
+    pg = polyshape([contours.cytoplasm;contours.nucleus]*[param.scale_len_x,0;0,param.scale_len_y]);
+    pg_c = polyshape([contours.cytoplasm]*[param.scale_len_x,0;0,param.scale_len_y]);
+    pg_n = polyshape([contours.nucleus]*[param.scale_len_x,0;0,param.scale_len_y]);
+    pg_il = polyshape([contours.il]*[param.scale_len_x,0;0,param.scale_len_y]);
     
     poly.il = pg_il;
     poly.cn = pg;

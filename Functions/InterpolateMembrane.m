@@ -1,27 +1,29 @@
 function [m_intrp] = InterpolateMembrane(I,desired_idx,TR,sol_M,param)
     scale=param.downsample;
-    samp_res = param.scale_len;
+    samp_res = param.scale_len_x;
     axial_resolution = param.axial_resolution;
 
     y = (0:scale:size(I,1)-1)*samp_res + scale*samp_res/2;
     x = (0:scale:size(I,2)-1)*samp_res + scale*samp_res/2;
-    %z = -param.h:param.scale_len*scale:ceil(param.h/param.scale_len/scale)*param.scale_len*scale;
     z = -param.h:axial_resolution*scale:ceil(param.h/axial_resolution/scale)*axial_resolution*scale;
 
-    %size(I)
+    TR_poly = TR;
+    TR_interp = TR;
+    
     m_intrp = NaN(size(y,2),size(x,2),size(z,2),size(desired_idx,2),'single');
-    % m_intrp = sparse(size(x,2),size(y,2)*size(z,2)*size(desired_idx,2)); 
-    %m_intrp = ndSparse(m_intrp,[size(x,2),size(y,2),size(z,2),size(desired_idx,2)]);
+
     h = waitbar(0,'Interpolating membrane...');
     for k=1:size(m_intrp,4)
         waitbar(k/size(m_intrp,4));
-        F = scatteredInterpolant(TR.Points(:,1),TR.Points(:,2),TR.Points(:,3),sol_M(:,desired_idx(k)));
+        F = scatteredInterpolant(TR_interp.Points(:,1),TR_interp.Points(:,2),TR_interp.Points(:,3),sol_M(:,desired_idx(k)));
         planes.n = [zeros(size(z,2),2),ones(size(z,2),1)];
         planes.r = [zeros(size(z,2),2),z'];
-        polygons = mesh_xsections( TR.Points,TR.ConnectivityList, planes, 1e-3, 0 );
+        polygons = mesh_xsections( TR_poly.Points,TR_poly.ConnectivityList, planes, 1e-3, 0 );
 
         P_m_i = {};
         N_m_i = {};
+        
+        
         for i=1:size(z,2)
             if length(polygons{i}) == 0
                 continue
@@ -33,12 +35,21 @@ function [m_intrp] = InterpolateMembrane(I,desired_idx,TR,sol_M,param)
             Y = [Y;Y(1)];
 
             pt = interparc(size(polygons{i}{idx}(:,1),1)*5,X,Y,'linear');
+            
+            if i == 1
+               sh = polyshape(pt);
+               [X,Y] = meshgrid(x,y);
+               idx_bottom = inpolygon(X(:),Y(:),sh.Vertices(:,1),sh.Vertices(:,2));
+               interp_res = F(X(idx_bottom),Y(idx_bottom),-2 * ones(sum(idx_bottom),1));
+               temp = m_intrp(:,:,1);
+               temp(idx_bottom) = interp_res;
+               m_intrp(:,:,1) = temp;
+               continue
+            end
 
-            %pt_sep = pdist(pt(1:2,:),'euclidean');
             pt = [pt,z(i)*ones(size(pt,1),1)];
             P_m_i{end+1} = pt;
-            %plot(polygons{1}{1}(:,1),polygons{1}{1}(:,2),'o')
-            %plot(pt(:,1),pt(:,2),'*')
+
             N = F(pt);
             N_m_i{end+1} = N;
             X = pt(:,1);
