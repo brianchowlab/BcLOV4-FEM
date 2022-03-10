@@ -160,3 +160,10 @@ Running the next code block will start the simulation.
 
 
 ### Step 6: Output
+
+
+## Examples:
+
+### Example 1: Widefield input with structured illumination
+
+### Example 2: Confocal z-stack input with wholefield illumination
