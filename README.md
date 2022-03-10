@@ -51,7 +51,8 @@ The parameter file governs the behavior of the simulation and is where you input
 |min_element_size| 1         |         Minimum tetrahedral element volume in um^3. <br/>|
 |max_element_size |5        |          Maximum tetrahedral element volume in um^3. <br/>|
 |downsample |1                     |   Downsampling for interpolation. Settign to 2 downsamples by a factor of 2. <br/>|
-|scale_len| 0.1                   |    Image pixel size in um. <br/>|
+|scale_len_x| 0.1                   |    Image pixel size in um. <br/>|
+|scale_len_y| 0.1                   |    Image pixel size in um. <br/>|
 |hn |4                           |     Maximum height of nucleus in um in the + and - direction (i.e. top-to-bottom height will be 2x this value). <br/>|
 |h |6                          |       Maximum height of cytoplasm in um in the + and - direction (i.e. top-to-bottom height will be 2x this value). <br/>|
 |extrude |30                    |      Governs number of points along the arc of the hemi-ellipsoid extrusion when extrapolating a volume. <br/>|
@@ -158,3 +159,4 @@ This will predict the excitation volume from the illumination ROI. The result sh
 Running the next code block will start the simulation.
 
 
+### Step 6: Output
