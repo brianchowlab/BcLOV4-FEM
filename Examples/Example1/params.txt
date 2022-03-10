@@ -1,0 +1,44 @@
+im_file ./Examples/Example1/Slice.tif %Image file name 
+il_roi_file ./Examples/Example1/ExcitationROI.roi %Illumination ROI, can be NA 
+nucleus_roi_file ./Examples/Example1/Nucleus.roi %Nucleus ROI, can be NA 
+cyto_roi_file ./Examples/Example1/Cytosol.roi %Cytosol ROI, can be NA
+concentration_im_file ./Examples/Example1/Slice.tif %Image from which to extract concentration
+mesh NA %Mesh extracted from z-stack, can be NA (e.g. for widefield images)
+z_resolution 0.15 %Z-stack interval in um. Can put any arbitrary value for widefield images.
+D 8.932 %um^2/s
+S 6000 %binding sites/um^2
+D_m 0.028 %um^2/s-0.089
+k_off_p 0.0541 %s-1
+k_on_d  1000 %M-1 s-1 2125.2
+k_on_l 31901 %M-1 s-1
+k_off_d 0.0166 %s-1
+k_off_l 0.0380 %s-1
+power_density .012 %W/cm^2
+excitation_type 1 %0 for confocal, 1 for widefield.
+quantum_yield_signaling_state 0.726 %Fraction
+duty_cycle 1 %Percent
+min_element_size 1 %um
+max_element_size 5 %um
+downsample 2 %Downsampling for interpolation
+scale_len_x 0.1 %pixel x dimension in um
+scale_len_y 0.1 %pixel y dimension in um
+hn 3 %Maximum height of nucleus in the + and - direction
+h 5 %Maximum height of cytoplasm in the + and - direction
+extrude 30 %Resolution of semi-ellipsoid extrusion
+excitation_wavelength 405 %nm
+extinction_coeff 7000 %M-1 cm-1 (at excitation wavelength)
+NA 1.4 %lens numerical aperture
+mag 60 %lens magnification
+immersion_n 1.515 %refractive index of immersion medium
+dt 1e-1 %Time step for ODE/PDE solver
+num_steps 2000 %Number of time steps
+store_interval 10 %How many time steps between stored solutions
+interpolation_interval 1 %For interpolation steps, interpolate every nth stored solution
+period 10 %Periodicity of excitation (s)
+theta 0.2929 %Value of theta for solver
+conc_ratio 500 %Ratio of cellular fluorescence to concentration (uM)
+offset 0 %Background fluorescence
+tol 1e-3 %Tolerance for Newton's Method
+alpha_radius 2 %For meshing. Higher values give more stable meshing, but decrease mesh concavity.
+plot 1 %Plot results?
+debug 0 %Generates more intermediate output
