@@ -55,4 +55,26 @@ Parameters have been defined in the 'params.txt' file:
 
 ## Loading images
 Open the "BcLOVModelwithExcitation_3D_FELICITY.m" file and run the first two cells, termed "Set Parameters" and "Load Image". You should see something like this pop up:
+
 ![Segmentation] (Images/Segmentation.png)
+
+Note the different outlines regions here. The yellow marks the nucleus, the red marks the cytoplasm, and the blue marks the structure illumination regions.
+
+## Mesh and excitation volume generation
+Now run the next cell, which will extrapolate a hemi-ellipsoid geometry from the 2D cell image. Run the next code cell. Something like this should pop-up:
+
+![Segmentation] (Images/Mesh.png)
+
+This shows the resultant geoemtry and mesh, as well as iso-surfaces of the resultant excitation volume. Check that these are correct before proceeding.
+
+## Running code
+The next cell "Build FEM matrices with FELICITY and solve," will compile the FEM matrices and run the simulation. Start it now. After it finishes running you should get a graphical output of the results. It will appear something like this (graph shown is for a different cell):
+![Segmentation] (../Example2/Images/ExcitationROI.png)
+![Segmentation] (../Example2/Images/OutsideROI.png)
+
+One of these graphs displays the average cytosolic concentration and membrane density over the simulation time across the entire cell. The other displays the average within the excitation region. Note that all the raw simulation data is available within the "Soln" variable for any further custom processing you wish to do.
+
+## Image generation
+You may want to generate cross-sections through the 3D result to visualize what it would look like under the microscope.
+
+
