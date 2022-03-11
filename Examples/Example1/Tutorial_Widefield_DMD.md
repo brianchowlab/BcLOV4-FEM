@@ -1,4 +1,4 @@
-# Tutorial: Running simulations on widefield images with structured illumination
+# Tutorial 1: Running simulations on widefield images with structured illumination
 
 This tutorial will describe how to run a simulation for a cell imaged using widefield microscopy and stimulated using structured illumination.
 
@@ -69,7 +69,7 @@ Now run the next cell, which will extrapolate a hemi-ellipsoid geometry from the
 <br/>
 
 
-This shows the resultant geoemtry and mesh, as well as iso-surfaces of the resultant excitation volume. Check that these are correct before proceeding.
+This shows the resultant geometry and mesh, as well as iso-surfaces of the resultant excitation volume. Check that these are correct before proceeding.
 
 ## Running code
 The next cell "Build FEM matrices with FELICITY and solve," will compile the FEM matrices and run the simulation. Start it now. After it finishes running you should get a graphical output of the results. It will appear something like this (graph shown is for a different cell):
@@ -86,9 +86,19 @@ One of these graphs displays the average cytosolic concentration and membrane de
 You may want to generate cross-sections through the 3D result to visualize what it would look like under the microscope. You can do this by running the next cell, which interpolates the mesh results onto a 2D grid at the z-position of interest. In this case, we set the z-location as z = 0, i.e. the focal plane of the experiment, to generate the following images (shown t time = 1 s, 25 s, and 200 s).
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/1.png?raw=true" align="left" width="250" ></a>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/26.png?raw=true" align="left" width="250" ></a>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/201.png?raw=true" align="left" width="250" ></a>. 
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/1.jpg?raw=true" align="left" width="250" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/26.jpg?raw=true" align="left" width="250" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/201.jpg?raw=true" align="left" width="250" ></a>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 <br/>
 
-
+Clearly there is not much change over time in this example - this is due to the low light intensity (12 mW/cm2) and low duty cycle of stimulation (only 100 ms every 10 s).
