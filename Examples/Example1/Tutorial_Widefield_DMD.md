@@ -69,7 +69,7 @@ Now run the next cell, which will extrapolate a hemi-ellipsoid geometry from the
 <br/>
 
 
-This shows the resultant geoemtry and mesh, as well as iso-surfaces of the resultant excitation volume. Check that these are correct before proceeding.
+This shows the resultant geometry and mesh, as well as iso-surfaces of the resultant excitation volume. Check that these are correct before proceeding.
 
 ## Running code
 The next cell "Build FEM matrices with FELICITY and solve," will compile the FEM matrices and run the simulation. Start it now. After it finishes running you should get a graphical output of the results. It will appear something like this (graph shown is for a different cell):
