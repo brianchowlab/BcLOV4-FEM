@@ -88,7 +88,7 @@ You may want to generate cross-sections through the 3D result to visualize what 
 <br/>
 <a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/1.jpg?raw=true" align="left" width="250" ></a>
 <a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/26.jpg?raw=true" align="left" width="250" ></a>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/201.jpg?raw=true" align="left" width="250" ></a>. 
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/201.jpg?raw=true" align="left" width="250" ></a>
 <br/>
 
-
+Clearly there is not much change over time in this example - this is due to the low light intensity (12 mW/cm2) and low duty cycle of stimulation (only 100 ms every 10 s).
