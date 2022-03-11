@@ -86,9 +86,9 @@ One of these graphs displays the average cytosolic concentration and membrane de
 You may want to generate cross-sections through the 3D result to visualize what it would look like under the microscope. You can do this by running the next cell, which interpolates the mesh results onto a 2D grid at the z-position of interest. In this case, we set the z-location as z = 0, i.e. the focal plane of the experiment, to generate the following images (shown t time = 1 s, 25 s, and 200 s).
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/1.png?raw=true" align="left" width="250" ></a>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/26.png?raw=true" align="left" width="250" ></a>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/201.png?raw=true" align="left" width="250" ></a>. 
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/1.jpg?raw=true" align="left" width="250" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/26.jpg?raw=true" align="left" width="250" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example1/TimePoints/201.jpg?raw=true" align="left" width="250" ></a>. 
 <br/>
 
 
