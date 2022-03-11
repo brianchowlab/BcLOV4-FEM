@@ -1,6 +1,6 @@
 %% Set parameters
 %Set parameter file here
-filename = './Examples/Example1/params';
+filename = './Examples/Example2/params';
 
 addpath ./Functions
 
@@ -135,13 +135,15 @@ c_intrp = InterpolateCytoplasm(pde_C,1:length(desired_times(1:param.interpolatio
 m_intrp = InterpolateMembrane(I,1:param.interpolation_interval:length(desired_times),props.pm_TR,sol_M,param);
 
 m_intrp(isnan(m_intrp)) = 0;
+m_intrp = permute(m_intrp,[2,1,3,4]);
 
 c_intrp = c_intrp/conversion * param.conc_ratio + param.offset;
 
 m_intrp = m_intrp * 1.2;
 c_intrp(m_intrp ~= 0) = 0.5*c_intrp(m_intrp ~= 0) + m_intrp(m_intrp~=0);
 
-for i = 1:size(c_intrp,4)
-	imwrite(uint16(squeeze(c_intrp(:,:,ceil(size(c_intrp,3)/2),i))),['./',folder_name_no_PSF,'/',num2str(i),'.tif']);
+
+for i = 1:10:size(c_intrp,4)
+	imwrite(uint16(squeeze(c_intrp(:,:,2,i))),['./Examples/Example2/Images/TimePoints','/',num2str(i),'.tif']);
 end
 
