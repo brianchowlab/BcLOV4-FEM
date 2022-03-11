@@ -164,7 +164,7 @@ Running the next code block will start the simulation.
 
 ### Step 6: Output
 <a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example2/Images/?raw=true" align="left" width="450" ></a>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example2/Images/?raw=true" align="left" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example2/Images/?raw=true" align="left" width="450" ></a>        
 
 <br/>
 <br/>
@@ -177,9 +177,15 @@ Running the next code block will start the simulation.
 <br/>
 <br/>
 <br/>
+<br/><br/>
 <br/>
 <br/>
 <br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
 
 ## Tutorials:
 
