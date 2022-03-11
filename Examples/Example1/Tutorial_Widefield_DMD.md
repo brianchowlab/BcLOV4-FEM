@@ -75,6 +75,10 @@ The next cell "Build FEM matrices with FELICITY and solve," will compile the FEM
 One of these graphs displays the average cytosolic concentration and membrane density over the simulation time across the entire cell. The other displays the average within the excitation region. Note that all the raw simulation data is available within the "Soln" variable for any further custom processing you wish to do.
 
 ## Image generation
-You may want to generate cross-sections through the 3D result to visualize what it would look like under the microscope.
+You may want to generate cross-sections through the 3D result to visualize what it would look like under the microscope. You can do this by running the next cell, which interpolates the mesh results onto a 2D grid at the z-position of interest. In this case, we set the z-location as z = 0, i.e. the focal plane of the experiment, to generate the following images.
+
+![Segmentation] (Images/TimePoints/1.tif)
+![Segmentation] (Images/TimePoints/26.tif)
+![Segmentation] (Images/TimePoints/201.tif)
 
 
