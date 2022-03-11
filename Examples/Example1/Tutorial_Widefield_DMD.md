@@ -1,4 +1,4 @@
-# Tutorial: Running simulations on widefield images with structured illumination
+# Tutorial 1: Running simulations on widefield images with structured illumination
 
 This tutorial will describe how to run a simulation for a cell imaged using widefield microscopy and stimulated using structured illumination.
 
