@@ -193,7 +193,7 @@ Running the next cell ("Interpolate") will generate 2D slices through the 3D mes
 <br/>
 <br/>
 
-Note the brightness along the right side of the membrane which is a result of the non-uniform, strcutured illumnation.
+Note the brightness along the right side of the membrane which is a result of the non-uniform, strcutured illumnation. Note also that at 60 s the cell cytoplasm actually looked brighter than at 5 s. This reflects the pulsatility of the stimulation - at 60 s there is actually more BcLOV4 in the cytosol than at 5 s.
 
 ### Step 8: Accounting for Point Spread Function
 Finally, it may be of interest to account for the PSF of the microscope, so as to mroe accurately simulate what will be seen on the microscope at any time poitn post-stimulation. This will require measuring (or accurately approximating) the microscopes PSF. If you have this, you can input the PSF into the 'param.PSF' setting. You can then use the ConvolvePSF function ('ConvolvePSF.m') to generate resultant images after accountign for convolution. For example, using the widefield scope in our lab (with a 63x oil immersion objective), we expect the following images at 1 s, 5 s, and 60 s fter accountign for diffraction:
@@ -211,6 +211,7 @@ Finally, it may be of interest to account for the PSF of the microscope, so as t
 <br/>
 <br/>
 
+Note the importance of diffractive effects here. It is much more challenging to see the membrane fluorescence once accounting for them! without accounting for the PSF one could overestimate how bright the membrane will be under the microscope.
 
 
 ## Tutorials:
