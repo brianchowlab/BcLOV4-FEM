@@ -19,7 +19,7 @@ This model is designed to be relatively flexible and easily extendable beyond th
 -mesh_xsections (https://www.mathworks.com/matlabcentral/fileexchange/70238-mesh_xsections?s_tid=srchtitle). Used for membrane interpolation. Packaged in this GitHub repository. <br/>
 
 
-## Instructions for Use:
+## Quick-Start Instructions for Use:
 
 ### Organization:
 The main driver script is called "BcLOVModelwtihExcitation_3D_FELICITY.m," while the associated functions are placed within the "Functions" folder.
@@ -78,7 +78,9 @@ The parameter file governs the behavior of the simulation and is where you input
 |debug |0  |                           Generates more intermediate output. <br/>|
 
 
-## Example:
+## Simple Example:
+Please refer to tutorials below for more complex examples.
+
 For this example, we will use an idealized circular cell with concentric nuclear and plasma membrane borders. The nuclear radius is 15 um and cytoplasmic radius is 25 um. This cell can be found in ./Example/OpticsModelCell.
 
 ### Step 1: Loading parameters
@@ -163,10 +165,24 @@ Running the next code block will start the simulation.
 
 
 ### Step 6: Output
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example2/Images/?raw=true" align="left" width="450" ></a>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example2/Images/?raw=true" align="left" width="450" ></a>        
+After the code finishes running you should get a graphical output of the results. It will appear something like this:
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/InROI.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/OutROI.png?raw=true" align="center" width="450" ></a>        
+
+One of these graphs displays the average cytosolic concentration and membrane density over the simulation time across the entire cell. The other displays the average within the excitation region. Note that all the raw simulation data is available within the "Soln" variable for any further custom processing you wish to do. As out input stimulation is pulsatile, BcLOV4 cytoplasmic concentration/membrane density also demonstrates pulsatility.  
+
+The code will also output a surface mesh which demonstrates the surface density of BcLOV4 at the end of the simulaiton (at 60 s). This will appear something like this.
+
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/Mesh.png?raw=true" align="center" width="450" ></a>
 
 <br/>
+
+### Step 7: Image generation
+Running the next cell ("Interpolate") will generate 2D slices through the 3D mesh over time. It will interpolate the data points onto a uniformly smpled grid on this 2D slice, so as to simulate what would be seen on the microscope (neglecting diffractive effects). For example, the images at 1 s, 5 s, and 60 s will look like this:
+
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/1.jpg?raw=true" align="left" width="250" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/5.jpg?raw=true" align="left" width="250" ></a> 
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/60.jpg?raw=true" align="left" width="250" ></a>  
 <br/>
 <br/>
 <br/>
@@ -176,8 +192,16 @@ Running the next code block will start the simulation.
 <br/>
 <br/>
 <br/>
+
+Note the brightness along the right side of the membrane which is a result of the non-uniform, strcutured illumnation.
+
+### Step 8: Accounting for Point Spread Function
+Finally, it may be of interest to account for the PSF of the microscope, so as to mroe accurately simulate what will be seen on the microscope at any time poitn post-stimulation. This will require measuring (or accurately approximating) the microscopes PSF. If you have this, you can input the PSF into the 'param.PSF' setting. You can then use the ConvolvePSF function ('ConvolvePSF.m') to generate resultant images after accountign for convolution. For example, using the widefield scope in our lab (with a 63x oil immersion objective), we expect the following images at 1 s, 5 s, and 60 s fter accountign for diffraction:
+
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/blur_1.jpg?raw=true" align="left" width="250" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/blur_5.jpg?raw=true" align="left" width="250" ></a> 
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example3/Outputs/blur_60.jpg?raw=true" align="left" width="250" ></a>  
 <br/>
-<br/><br/>
 <br/>
 <br/>
 <br/>
@@ -185,6 +209,8 @@ Running the next code block will start the simulation.
 <br/>
 <br/>
 <br/>
+<br/>
+
 
 
 ## Tutorials:
