@@ -21,6 +21,7 @@ Stay tuned for our upcoming paper regarding applications of this toolbox.
 -ndSparse (https://www.mathworks.com/matlabcentral/fileexchange/29832-n-dimensional-sparse-arrays?s_tid=srchtitle). Used for efficient memory handling. Packaged in ths GitHub repository. <br/>
 -readImageJROI (https://www.mathworks.com/matlabcentral/fileexchange/32479-readimagejroi?s_tid=srchtitle). Used for reading in ROIs from imageJ. Packaged in this GitHub repository. <br/>
 -mesh_xsections (https://www.mathworks.com/matlabcentral/fileexchange/70238-mesh_xsections?s_tid=srchtitle). Used for membrane interpolation. Packaged in this GitHub repository. <br/>
+-Virtual Cell (https://vcell.org). Only necessary if using Virtual Cell integration (see tutorials). <br/>
 
 
 ## Quick-Start Instructions for Use:
