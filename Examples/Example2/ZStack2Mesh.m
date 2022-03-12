@@ -23,6 +23,8 @@ end
 filename = './Examples/Example2/Z-stack.tif';
 param.threshold_cyto = 0.3;
 param.threshold_nuc = 0.35;
+param.slice = 127;
+param.idx = 80:210;
 tstack = Tiff(filename,'r');
 
 [i,j] = size(tstack.read());
@@ -54,7 +56,7 @@ nucleus = poly2mask(nucleus_contour(:,1),nucleus_contour(:,2),size(data,1),size(
 cytoplasm = ReadImageJROI(param.cyto_roi_file);
 cytoplasm_contour = cytoplasm.mnCoordinates;
 cytoplasm = poly2mask(cytoplasm_contour(:,1),cytoplasm_contour(:,2),size(data,1),size(data,2));
-%%
+%% Pre-process
 slice = idx_mid;
 I = data(:,:,idx_mid);
 
@@ -69,9 +71,9 @@ avgs = avgs - avgs(1);
 idx = find(avgs > 0.1*(mean(avgs)));
 idx = min(idx):max(idx);
 
-slice=127;
-idx=80:210;
-%%
+slice=param.slice;
+idx = param.idx;
+%% Visualize Z-Stack
 addpath ./Dependencies/image3
 clf
 T = [1 0 0 0;0 1 0 0;0 0 1.5 0];
@@ -83,7 +85,7 @@ colormap gray(88);
 view(15,10); axis equal; axis vis3d;
 light;
 set(gca,'visible','off')
-%%
+%% Run
 
 cytoplasm_and_nucleus = cytoplasm_store;
 nucleus = nucleus_store;
@@ -182,7 +184,7 @@ for i = (slice+1):idx(end)
     nucleus = nucleus_only;
     visboundaries(nucleus_only,'Color','g');
 end
-%%
+%% Output segmentation
 nuc_3D_interp = zeros(size(nuc_3D));
 
 for i = 1:size(nuc_3D,1)
@@ -204,7 +206,7 @@ for i = 1:size(nuc_3D,3)
     imwrite(cell_segment(:,:,i),[f,'-segment.tif'],'WriteMode','append','Compression','none');
 end
 
-%%
+%% Output Mesh
 offset = 5;
 temp = cyt_3D_final(:,:,offset:end);% - nuc_3D_interp_final;
 [x,y,z] = ind2sub(size(temp),find(temp(:) == 1));
