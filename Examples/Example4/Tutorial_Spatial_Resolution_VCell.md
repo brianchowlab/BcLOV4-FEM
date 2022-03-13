@@ -26,7 +26,7 @@ When you open "2P_Final.vcml" you will see the reaction diagram already setup. T
 5) An additional state ("light") is included to allow for a time- and space-varying excitation intput that drives reactions (1) and (2), i.e. the dark->lit conversion.
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/FrontPage.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/FrontPage.png?raw=true" align="center" width="750" ></a>
 <br/>
 
 ### Definining reactions
@@ -53,7 +53,7 @@ Virtual Cell has built-in mesh generating capabilities, but this toolbox gives m
 You now need to define which part of the mesh cooresponds to th ecytoplasm, nucleus, plasma membrane, etc. This is also done in the geometry tab and should look like this:
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Geom.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Geom.png?raw=true" align="center" width="750" ></a>
 <br/>
 
 
@@ -88,6 +88,6 @@ Once the simulation has finished running, you may want to analyze it. This can b
 You can plot it using the "VCell_Plots.m" script. The result should look something like this:
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Plot.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Plot.png?raw=true" align="center" width="750" ></a>
 <br/>
 
