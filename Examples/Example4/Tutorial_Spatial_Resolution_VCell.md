@@ -33,21 +33,21 @@ When you open "2P_Final.vcml" you will see the reaction diagram already setup. T
 We next define all of our reactions according to the biophysical parameter values for the protein. Navigate to the following page:
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Reactions.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Reactions.png?raw=true" align="center" width="750" ></a>
 <br/>
 <br/>
 
 We define the parameters by clicking on each reaction. The parameters here are equivalent to our inputs into the "params" file in our MATLAB toolbox. For example, a reaction would appear like this:
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Reaction-ex.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Reaction-ex.png?raw=true" align="center" width="750" ></a>
 <br/>
 
 ## Porting mesh from MATLAB to VCell
 Virtual Cell has built-in mesh generating capabilities, but this toolbox gives more flexibility in mesh generation, so you may want to port over the toolbox mesh to Virtual Cell. We have created a MATLAB script to allow for this. To do this, open "Mesh2STL.m," load your toolbox mesh into MATLAB, and then run the script. This will create a STL file called 'optics_geom.stl" which defines the mesh in a Virtual Cell compatible format. Then go to the geometry section in Virtual Cell and go to the option to "Replace Geometry." Import the STL file into Virtual Cell. You should not see see something like this:
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Geom-3D.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Geom-3D.png?raw=true" align="center" width="750" ></a>
 <br/>
 
 You now need to define which part of the mesh cooresponds to th ecytoplasm, nucleus, plasma membrane, etc. This is also done in the geometry tab and should look like this:
