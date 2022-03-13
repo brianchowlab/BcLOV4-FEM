@@ -62,13 +62,13 @@ You now need to define which part of the mesh cooresponds to th ecytoplasm, nucl
 If we have time- and space- varying illumination (i.e. pulsed structures illumination, such as a laser-scanning confocal excitation ROI), we will need to input that into Virtual Cell. Virtual Cell does not natively support such inputs, but we can make it work by defining a time- and space- varying initial condition in the initial conditions tab:
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Initial.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Initial.png?raw=true" align="center" width="750" ></a>
 <br/>
 
 We have incldued a MATLAB Script to define the light function. Load the "boolean_VCell.m" script, which gives options to generate rastered 1P, 2P, or TIRF elimination. You may need to edit this scripts for your specific needs. Runt he cooresponding cell, which will generate a TXT file that gives the inout function. Copy the input function into Virtual Cell. It will look somethign like this:
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Eq.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Eq.png?raw=true" align="center" width="750" ></a>
 <br/>
 
 Do not forget to define the rest of your initial conditions, e.g. BcLOV4 initial concentration.
@@ -77,7 +77,7 @@ Do not forget to define the rest of your initial conditions, e.g. BcLOV4 initial
 You are now ready to run the simulation in the simulations tab. You can edit the runtime. It will look something like this:
 
 <br/>
-<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Simul.png?raw=true" align="center" width="450" ></a>
+<a href="url"><img src="https://github.com/brianchowlab/BcLOV4-FEM/blob/main/Examples/Example4/Images/Simul.png?raw=true" align="center" width="750" ></a>
 <br/>
 
 Start your simulation and let it run.
