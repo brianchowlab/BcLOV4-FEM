@@ -1,5 +1,6 @@
 # BcLOV4-FEM
 Code used for 3D finite element analysis for BcLOV4 spatiotemporal dynamics.
+[![DOI](https://zenodo.org/badge/318320689.svg)](https://zenodo.org/badge/latestdoi/318320689)
 
 ## Introduction:
 
